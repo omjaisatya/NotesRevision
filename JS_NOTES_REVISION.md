@@ -859,7 +859,7 @@ if (!window.console) {
 
 The shim stops all console output; extend it if you need methods like `dir`, `warn`, etc.
 
-## 5.1 Measuring time — `console.time()` / `console.timeEnd()`
+## 5.1 Measuring time `console.time()` / `console.timeEnd()`
 
 Start/stop timers by a `label`. Multiple `timeEnd()` calls with the same label report elapsed time since the original `time()`.
 
