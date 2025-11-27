@@ -894,7 +894,7 @@ console.log("%cHello world!", "color: blue; font-size: 16px");
 
 **Caveat:** styling is purely cosmetic in devtools and not portable to all consoles.
 
-## 5.3 Groups — `console.group()`, `console.groupCollapsed()`, `console.groupEnd()`
+## 5.3 Groups `console.group()`, `console.groupCollapsed()`, `console.groupEnd()`
 
 Indent and collapse related logs:
 
@@ -920,7 +920,7 @@ All accept objects, arrays, functions, Dates, etc. Many consoles allow expanding
 
 **Tip:** remove or guard verbose logs in production builds.
 
-## 5.5 Stack traces — `console.trace()`
+## 5.5 Stack traces `console.trace()`
 
 Prints the current stack trace (useful to see call paths):
 
@@ -936,7 +936,7 @@ a();
 
 You can also inspect `new Error().stack` for programmatic access.
 
-## 5.6 Tabular output — `console.table()`
+## 5.6 Tabular output `console.table()`
 
 Displays arrays or objects as a table, optionally restricting columns:
 
@@ -950,7 +950,7 @@ console.table(personArr, ["name", "personId"]);
 
 Useful for quick inspection of homogeneous collections.
 
-## 5.7 Counting — `console.count([label])`
+## 5.7 Counting `console.count([label])`
 
 Keeps an internal counter per label and logs `label: X`. Useful for seeing how often code paths execute.
 
@@ -964,7 +964,7 @@ console.count(); // uses empty string label
 
 Note: the label normalization rules vary by engine (`Number('42.3')` vs `'42.3'` may produce same label in some consoles).
 
-## 5.8 Clearing the console — `console.clear()`
+## 5.8 Clearing the console `console.clear()`
 
 Clears the console output. Some environments print a small marker like "Console was cleared".
 
@@ -972,7 +972,7 @@ Clears the console output. Some environments print a small marker like "Console 
 console.clear();
 ```
 
-## 5.9 Inspecting objects — `console.dir()` and `console.dirxml()`
+## 5.9 Inspecting objects `console.dir()` and `console.dirxml()`
 
 - `console.dir(obj)` — shows a navigable list of object properties (often better for plain JS objects).
 - `console.dirxml(node)` — prints an XML/HTML-like representation for DOM nodes; otherwise prints object representation.
@@ -984,7 +984,7 @@ console.dirxml(document);
 
 Behavior differs across browsers; try both when inspecting complex structures.
 
-## 5.10 Assertions — `console.assert()`
+## 5.10 Assertions `console.assert()`
 
 Logs an error message if the assertion expression is falsy. It does not throw (in browsers) so execution continues.
 
