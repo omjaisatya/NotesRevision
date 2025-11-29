@@ -1522,3 +1522,174 @@ new Array(n + 1).join("abc");
 ```
 
 (Prefer `repeat` or a polyfill for clarity.)
+
+# Chapter 8. Date
+
+Compact, accurate reference for working with `Date` in JavaScript. Covers creation, formatting, UTC vs local, common pitfalls, and handy utilities.
+
+## Parameter summary (when using `new Date(year, month, ...)`)
+
+- `value` —> milliseconds since Unix epoch (1970-01-01T00:00:00.000Z)
+- `dateAsString` —> parseable date string (see `Date.parse`)
+- `year` —> full year (but values `0..99` are treated specially; see note)
+- `month` —> `0..11` (`0` = January, `11` = December)
+- `day` —> day of month `1..31` (optional)
+- `hour` —> `0..23` (optional)
+- `minute` —> `0..59` (optional)
+- `second` —> `0..59` (optional)
+- `millisecond` —> `0..999` (optional)
+
+**Important:** out-of-range values roll over (e.g., month `12` → next January, day `32` → next month). No error is thrown.
+
+## 8.1 Creating `Date` objects
+
+### No arguments
+
+```js
+new Date(); // current date/time (local)
+```
+
+### One numeric argument (milliseconds since epoch)
+
+```js
+new Date(0); // 1970-01-01T00:00:00.000Z
+new Date(749019369738); // date at given ms
+```
+
+### One string argument (parsed)
+
+```js
+new Date("2012-01-01T00:00:00.000Z"); // ISO — parsed as UTC
+new Date("11/12/2012"); // implementation-dependent parsing — avoid non-ISO strings
+```
+
+### Multiple numeric args (year, month, day, hours, minutes, seconds, ms)
+
+```js
+new Date(2017, 5, 1); // June 1, 2017 (month is 0-based)
+```
+
+### Create from UTC values
+
+```js
+new Date(Date.UTC(2012, 0, 1)); // constructs a Date for 2012-01-01T00:00:00Z
+```
+
+### Special: years `0..99`
+
+Values `0..99` are interpreted as `1900..1999` when passed to the multi-arg constructor. Use `setFullYear()` to set year 12 CE:
+
+```js
+let d = new Date(12, 0); // 1912-01-01
+d.setFullYear(12); // year 12 CE
+```
+
+## 8.2 Converting `Date` to string
+
+- `date.toString()` → human-local string, e.g. `"Fri Apr 15 2016 07:48:48 GMT-0400 (EDT)"`
+- `date.toTimeString()` → time part with zone
+- `date.toDateString()` → date part only
+- `date.toUTCString()` → UTC string, e.g. `"Fri, 15 Apr 2016 11:48:48 GMT"`
+- `date.toISOString()` → ISO 8601 in UTC, e.g. `"2016-04-14T23:49:08.596Z"`
+- `date.toGMTString()` → deprecated; prefer `toUTCString()`
+
+## 8.3 UTC vs Local time — best practices
+
+- **Local `new Date(...)`** creates date in local timezone. This can cause surprising differences when communicating plain day/month/year across timezones.
+- **Prefer UTC** for timezone-agnostic dates: construct with `Date.UTC(...)` or use UTC getter/setter methods.
+
+```js
+// Communicate a calendar date unambiguously
+let birthdayUtcMs = Date.UTC(2000, 0, 1); // milliseconds for 2000-01-01T00:00:00Z
+// On receiver:
+let birthday = new Date(birthdayUtcMs);
+```
+
+- Use `getUTCFullYear()`, `getUTCMonth()`, `getUTCDate()`, etc., when interpreting UTC-based timestamps.
+- `Date.UTC(...)` returns epoch ms and is useful for transport: `new Date(Date.UTC(...))` or send ms directly.
+
+## UTC setter/getter counterparts
+
+- Local: `getFullYear(), getMonth(), getDate(), getHours(), getMinutes(), getSeconds(), getMilliseconds()`
+- UTC: `getUTCFullYear(), getUTCMonth(), getUTCDate(), getUTCHours(), ...`
+- Setters: `setFullYear()`, `setMonth()`, `setDate()`, `setHours()`, plus `setUTCFullYear()`, `setUTCMonth()`, etc.
+
+## 8.4 Formatting dates (localization)
+
+Use `toLocaleDateString` / `toLocaleString` / `toLocaleTimeString` with options:
+
+```js
+let opts = { weekday: "long", year: "numeric", month: "short", day: "numeric" };
+new Date().toLocaleDateString("en-GB", opts); // "Thursday, Apr 14, 2016" (locale-dependent)
+```
+
+`locales` accepts BCP 47 tags (e.g., `'en-GB'`). `options` supports `timeZone`, `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`, `timeZoneName`, `hour12`, and more.
+
+If you need highly custom formatting, build a small formatter using getters (or use a date library).
+
+## 8.5 Milliseconds since epoch
+
+- Static now:
+
+```js
+Date.now(); // ms since 1970-01-01T00:00:00Z
+```
+
+- Instance:
+
+```js
+new Date().getTime();
+```
+
+Use epoch ms for unambiguous transport/storage.
+
+## 8.6 Common getters (current values)
+
+```js
+new Date().getFullYear(); // 4-digit year
+new Date().getMonth(); // 0-11 (add 1 for human month)
+new Date().getDate(); // day of month 1-31
+new Date().getHours(); // 0-23
+new Date().getMinutes(); // 0-59
+new Date().getSeconds(); // 0-59
+new Date().getMilliseconds(); // 0-999
+```
+
+## 8.7 Incrementing a date
+
+Rollover works automatically with setter/getter arithmetic:
+
+```js
+let d = new Date();
+d.setDate(d.getDate() + 1); // add one day
+```
+
+Adding more than the days in a month rolls into subsequent months. Same behavior applies for `setMonth`, `setHours`, etc.
+
+### Add business days (example)
+
+```js
+function addWorkDays(startDate, days) {
+  let dow = startDate.getDay(); // 0..6
+  let daysToAdd = days;
+  if (dow === 0) daysToAdd++; // if Sunday, skip to Monday
+  if (dow + daysToAdd >= 6) {
+    let remaining = daysToAdd - (5 - dow);
+    daysToAdd += 2; // add weekend
+    if (remaining > 5) {
+      daysToAdd += 2 * Math.floor(remaining / 5);
+      if (remaining % 5 === 0) daysToAdd -= 2;
+    }
+  }
+  startDate.setDate(startDate.getDate() + daysToAdd);
+  return startDate;
+}
+```
+
+Note: Holidays are not handled.
+
+## 8.8 Convert `Date` to JSON
+
+- `date.toJSON()` → returns `date.toISOString()` by default, e.g. `"2016-04-14T23:49:08.596Z"`
+
+This ISO string is suitable for APIs and storage.
