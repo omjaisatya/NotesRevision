@@ -244,7 +244,7 @@ img.src = "https://i.ytimg.com/vi/zecueq-mo4M/maxresdefault.jpg";
 document.body.appendChild(img);
 ```
 
-## Chapter 2. JavaScript Variables
+# Chapter 2. JavaScript Variables
 
 ## Overview
 
@@ -693,7 +693,7 @@ Square root of a negative number:
 Math.sqrt(-1); // NaN
 ```
 
-## Chapter 4. Comments
+# Chapter 4. Comments
 
 # 4.1 Using Comments
 
@@ -802,7 +802,7 @@ self.postMessage('reached JS "file"');
 
 This is purely historical, not something you should ever write.
 
-## Chapter 5. Console
+# Chapter 5. Console
 
 The browser (and Node) debugging console exposes a `console` object with many utility methods for logging, timing, grouping, inspecting, and debugging runtime behavior. Behavior and available methods vary by environment and browser, so use feature checks when needed.
 
@@ -1004,3 +1004,213 @@ Additional arguments after the assertion are printed only when the assertion fai
 - Use `console.table()` for readable tabular data.
 - Wrap console usage with feature checks when supporting legacy environments.
 - Know that consoles are developer tools — formatting and features are implementation-specific; write code that doesn’t depend on console side-effects.
+
+# Chapter 6. Datatypes in JavaScript
+
+JavaScript's type system is flexible but full of quirks. This chapter summarizes the correct, practical ways to inspect and understand values.
+
+## 6.1 `typeof`
+
+`typeof` is the built-in operator for checking the type of a value. It works well for primitives but is inconsistent for some objects.
+
+### Results
+
+#### 1. Strings
+
+```js
+typeof "String"; // "string"
+typeof Date(2011, 1, 1); // "string" because Date() without new returns a string
+```
+
+#### 2. Numbers
+
+```js
+typeof 42; // "number"
+```
+
+#### 3. Boolean
+
+```js
+typeof true; // "boolean"
+```
+
+#### 4. Object (overly broad)
+
+```js
+typeof {}; // "object"
+typeof []; // "object"
+typeof null; // "object"       // historical bug
+typeof /aaa/; // "object"
+typeof Error(); // "object"
+```
+
+#### 5. Function
+
+```js
+typeof function () {}; // "function"
+```
+
+#### 6. Undefined
+
+```js
+var x;
+typeof x; // "undefined"
+```
+
+### Key issue
+
+`typeof` lumps many different object categories into `"object"` and incorrectly reports `null` as `"object"`.
+
+## 6.2 Finding an Object’s Class (`instanceof` and `constructor`)
+
+### Using `instanceof`
+
+Use `instanceof` to check whether an object was created by a constructor or its prototype chain.
+
+```js
+function sum(...args) {
+  if (args.length === 1) {
+    const [first] = args;
+    if (first instanceof Array) {
+      return sum(...first);
+    }
+  }
+  return args.reduce((a, b) => a + b);
+}
+
+console.log(sum(1, 2, 3)); // 6
+console.log(sum([1, 2, 3])); // 6
+console.log(sum(4)); // 4
+```
+
+### Primitive caveat
+
+Primitives are **not** instances of wrapper constructors:
+
+```js
+2 instanceof Number; // false
+"abc" instanceof String; // false
+true instanceof Boolean; // false
+Symbol() instanceof Symbol; // false
+```
+
+### Using `.constructor`
+
+Every value except `null` and `undefined` has a `.constructor` reference:
+
+```js
+[].constructor === Array; // true
+[].constructor === Object; // false
+```
+
+This does not check inheritance, unlike `instanceof`.
+
+### Safe example function:
+
+```js
+function isNumber(value) {
+  if (value === null || value === undefined) return false;
+  return value.constructor === Number;
+}
+
+isNumber(null); // false
+isNumber("abc"); // false
+isNumber(0); // true
+isNumber(Number("10")); // true
+isNumber(NaN); // true
+```
+
+## 6.3 Getting Object Type with `Object.prototype.toString.call()`
+
+This is the **most reliable** way to get the internal `[[Class]]` of a value.
+It returns strings like `"[object Array]"`.
+
+### Examples
+
+#### 1. String
+
+```js
+Object.prototype.toString.call("String");
+// "[object String]"
+```
+
+#### 2. Number
+
+```js
+Object.prototype.toString.call(42);
+// "[object Number]"
+```
+
+#### 3. Boolean
+
+```js
+Object.prototype.toString.call(true);
+// "[object Boolean]"
+```
+
+#### 4. Object
+
+```js
+Object.prototype.toString.call({});
+// "[object Object]"
+```
+
+#### 5. Function
+
+```js
+Object.prototype.toString.call(function () {});
+// "[object Function]"
+```
+
+#### 6. Date
+
+```js
+Object.prototype.toString.call(new Date());
+// "[object Date]"
+```
+
+#### 7. RegExp
+
+```js
+Object.prototype.toString.call(/foo/);
+// "[object RegExp]"
+```
+
+#### 8. Array
+
+```js
+Object.prototype.toString.call([]);
+// "[object Array]"
+```
+
+#### 9. Null
+
+```js
+Object.prototype.toString.call(null);
+// "[object Null]"
+```
+
+#### 10. Undefined
+
+```js
+Object.prototype.toString.call(undefined);
+// "[object Undefined]"
+```
+
+#### 11. Error
+
+```js
+Object.prototype.toString.call(Error());
+// "[object Error]"
+```
+
+## Summary of Type-Checking Methods
+
+| Method                           | Good for                             | Weaknesses                                         |
+| -------------------------------- | ------------------------------------ | -------------------------------------------------- |
+| `typeof`                         | Primitives, functions                | `null` bug, arrays/objects indistinguishable       |
+| `instanceof`                     | Object instances, inheritance checks | Fails with primitives, problems across iframes     |
+| `.constructor`                   | Direct constructor equality          | Cannot detect subclasses, fails for null/undefined |
+| `Object.prototype.toString.call` | Precise internal class               | Verbose, not widely known by beginners             |
+
+This is the hierarchy you should fall back on when accuracy matters.
