@@ -1693,3 +1693,153 @@ Note: Holidays are not handled.
 - `date.toJSON()` → returns `date.toISOString()` by default, e.g. `"2016-04-14T23:49:08.596Z"`
 
 This ISO string is suitable for APIs and storage.
+
+# Chapter 9. Date Comparison
+
+Practical, accurate notes for comparing `Date` objects and computing differences. Includes examples, common pitfalls, and handy helper functions.
+
+## 9.1 Comparing Date values
+
+### Key idea
+
+`Date` objects are objects. Using `==` or `===` compares **references**, not the point-in-time they represent. To compare the actual time value, compare their numeric timestamps.
+
+`Date.prototype.valueOf()` and `Date.prototype.getTime()` both return the epoch milliseconds for the `Date` instance and are interchangeable.
+
+### Examples
+
+```js
+const d1 = new Date();
+const d2 = new Date(d1.valueOf() + 10);
+
+d1 === d2; // false (different objects)
+d1.valueOf() === d2.getTime(); // false (compares timestamps)
+d1 < d2; // true  (works because both are coerced to numbers)
+d1 <= d2; // true  (works with equality)
+```
+
+If two variables reference the same object, `===` returns `true`:
+
+```js
+const a = new Date();
+const b = a;
+a === b; // true
+```
+
+### Correct equality check (same instant in time)
+
+```js
+function isSameMoment(a, b) {
+  return a?.valueOf() === b?.valueOf(); // safe if a or b might be null/undefined
+}
+
+isSameMoment(new Date(0), new Date(0)); // true
+```
+
+## 9.2 Date difference calculation
+
+Compute differences by subtracting timestamps (ms). Convert milliseconds into desired units.
+
+### Milliseconds, seconds, minutes, hours, days, years
+
+```js
+const date1 = new Date();
+const date2 = new Date(date1.valueOf() + 5_000); // +5 seconds
+
+const diffMs = date2.getTime() - date1.getTime(); // 5000
+const diffSec = diffMs / 1000; // 5
+const diffMin = diffSec / 60;
+const diffHours = diffMin / 60;
+const diffDays = diffHours / 24;
+const diffYears = diffDays / 365; // approximate
+```
+
+### Practical helper functions
+
+```js
+// returns difference in milliseconds (positive if b > a)
+function diffMs(a, b) {
+  return b.getTime() - a.getTime();
+}
+
+// difference in whole days (floor)
+function diffDays(a, b) {
+  return Math.floor(diffMs(a, b) / (1000 * 60 * 60 * 24));
+}
+
+// difference in hours with fraction
+function diffHours(a, b) {
+  return diffMs(a, b) / (1000 * 60 * 60);
+}
+
+// formatted breakdown: days, hours, minutes, seconds
+function diffHuman(a, b) {
+  let ms = Math.abs(diffMs(a, b));
+  const days = Math.floor(ms / 86400000);
+  ms %= 86400000;
+  const hours = Math.floor(ms / 3600000);
+  ms %= 3600000;
+  const minutes = Math.floor(ms / 60000);
+  ms %= 60000;
+  const seconds = Math.floor(ms / 1000);
+  ms %= 1000;
+  return { days, hours, minutes, seconds, milliseconds: ms };
+}
+```
+
+## 9.3 Important caveats & gotchas
+
+- **Reference vs value:** `===` compares object identity. Use `getTime()`/`valueOf()` for timestamp equality.
+- **Time zones:** `Date` stores a point in time (epoch ms). `getFullYear()`/`getMonth()`/`getDate()` return local-time components. When comparing calendar dates from different time zones, convert to UTC or compare normalized date-only values.
+- **Daylight saving time (DST):** Adding 24 hours (ms) may not always move the local date by +1 day if DST boundary occurs. Use date setters (`setDate(getDate() + N)`) when you mean "advance calendar day" in local time.
+- **Leap years and varying month lengths:** Converting `diffMs / (1000*60*60*24*365)` gives only an approximation for years. For accurate year/month differences, compute with calendar arithmetic (compare year/month/day components) or use a library.
+- **Floating point rounding:** Large differences divided by units can produce fractional imprecision; round appropriately when displaying.
+- **Null/undefined inputs:** Guard against invalid inputs before calling `.getTime()`.
+
+## 9.4 Examples for common tasks
+
+### Are two dates on the same calendar day (local time)?
+
+```js
+function isSameLocalDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+```
+
+### Are two dates on the same UTC day?
+
+```js
+function isSameUtcDay(a, b) {
+  return (
+    a.getUTCFullYear() === b.getUTCFullYear() &&
+    a.getUTCMonth() === b.getUTCMonth() &&
+    a.getUTCDate() === b.getUTCDate()
+  );
+}
+```
+
+### Number of whole days between two dates (calendar-aware)
+
+If you want the difference in calendar days regardless of DST shifts, normalize both to midnight local time:
+
+```js
+function daysBetweenCalendar(a, b) {
+  const ad = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const bd = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((bd - ad) / (1000 * 60 * 60 * 24));
+}
+```
+
+## 9.5 Validity checks
+
+Always verify inputs:
+
+```js
+function isValidDate(d) {
+  return d instanceof Date && !Number.isNaN(d.getTime());
+}
+```
