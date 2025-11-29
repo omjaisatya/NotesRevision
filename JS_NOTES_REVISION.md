@@ -1843,3 +1843,263 @@ function isValidDate(d) {
   return d instanceof Date && !Number.isNaN(d.getTime());
 }
 ```
+
+# Chapter 10. Comparison Operations
+
+Clear, practical summary of equality, relational operators, coercion rules, short-circuiting, and useful patterns. Focus on what trips people up and how to avoid bugs.
+
+# 10.1 Abstract equality (`==`) and coercion - the problem
+
+`==` performs type conversion when operand types differ. That coercion produces surprising results:
+
+```js
+"" == 0; // true
+0 == "0"; // true
+"" == "0"; // false
+
+false == 0; // true
+false == "0"; // true
+```
+
+Why? `""` converts to `0`, `"0"` converts to `0`, `false` converts to `0`. But comparing two strings does no conversion, so `"" == "0"` is false.
+
+**Rule of thumb:** avoid `==` unless you understand the coercion rules. Prefer explicit conversions or `===`.
+
+```js
+Number("") === 0; // true
+String(0) === "0"; // true
+```
+
+# 10.2 NaN and comparisons
+
+`NaN` means Not a Number. It behaves oddly:
+
+- `typeof NaN === "number"`
+- `NaN === NaN` is `false`
+- Any comparison with `NaN` (`<`, `>`, `==`, `===`) is `false`
+
+Use `Number.isNaN()` (ES6) to test strictly for NaN:
+
+```js
+Number.isNaN(NaN); // true
+Number.isNaN("str" - 12); // true
+Number.isNaN("24"); // false
+```
+
+Polyfill for older environments:
+
+```js
+Number.isNaN =
+  Number.isNaN ||
+  function (v) {
+    return v !== v;
+  };
+```
+
+`Object.is()` (ES6) implements SameValue: `Object.is(NaN, NaN)` is `true`, and `Object.is(+0, -0)` is `false`.
+
+# 10.3 Short-circuiting with `&&` and `||`
+
+- `x && y`: evaluates `y` only if `x` is truthy. Useful to prevent errors and conditionally call functions.
+- `x || y`: evaluates `y` only if `x` is falsy. Good for defaults.
+
+Examples:
+
+```js
+function T() {
+  console.log("T");
+  return true;
+}
+function F() {
+  console.log("F");
+  return false;
+}
+
+T() && F(); // prints T then F
+F() && T(); // prints F only
+T() || F(); // prints T only
+F() || T(); // prints F then T
+```
+
+Use pattern to guard property access:
+
+```js
+if (obj !== undefined && obj.property) { ... } // safe
+// or for optional callback
+cb && cb(); // calls only if cb is truthy
+```
+
+Be mindful: `0`, `""`, and `false` are valid values but are falsy. Using `||` for defaults may clobber them.
+
+# 10.4 null vs undefined
+
+- `null == undefined` → `true`
+- `null === undefined` → `false`
+
+Semantics:
+
+- `undefined` means absence of value or uninitialized.
+- `null` is an explicit placeholder intentionally set.
+
+Do not assign `undefined` yourself. Use `null` for intentional emptiness and `typeof` checks for existence to avoid reference errors:
+
+```js
+if (typeof foo === "undefined") { ... }
+```
+
+# 10.5 Abstract Equality Algorithm (summary)
+
+When `x == y`:
+
+1. If same Type → use `===`.
+2. `null` and `undefined` are equal.
+3. If one is a Number and the other is a String → convert String to Number.
+4. If Boolean is involved → convert Boolean to Number.
+5. If Object vs primitive (String/Number/Symbol) → ToPrimitive(object) then repeat.
+6. Otherwise false.
+
+This explains conversions like `0 == ''` and `false == '0'`.
+
+# 10.6 Logic operators with Booleans and non-boolean values
+
+Boolean operators return the actual operand value, not strictly `true`/`false`.
+
+`||` returns first truthy value or last value if none:
+
+```js
+"hello" || ""; // "hello"
+"" || []; // []
+0 || {}; // {}
+0 || "" || 5; // 5
+```
+
+`&&` returns the first falsy value or the last value if all truthy:
+
+```js
+"hello" && ""; // ""
+1 && 5; // 5
+0 && {}; // 0
+```
+
+Use these behaviours intentionally, but remember falsy values that might be legitimate (0, '', false).
+
+# 10.7 Automatic type conversions (gotchas)
+
+- `+` with a string concatenates: `5 + "7" === "57"`.
+- `-`, `*`, `/` coerce to numbers: `"5" - 2 === 3`.
+- Non-numeric string math → `NaN`: `"a" - "b" // NaN`.
+- When you rely on numeric math, convert explicitly with `Number()` or `parseInt/parseFloat`.
+
+# 10.8 Empty array and coercion oddity
+
+`[] == false` is `true`.
+
+Why: `[]` → `""` when ToPrimitive, `""` → `0` when ToNumber, then `0 == false` → `true`.
+
+But `[]` is truthy in boolean contexts:
+
+```js
+[] ? "truthy" : "falsy"; // "truthy"
+```
+
+So remember: `==` combines shape conversions that can surprise you.
+
+# 10.9 Equality comparison variants - quick reference
+
+- **SameValue** (use `Object.is`): strictest; `Object.is(NaN, NaN)` is `true`, `Object.is(+0, -0)` is `false`.
+- **SameValueZero** (used by `Array.prototype.includes`): like SameValue but `+0` and `-0` are treated as equal.
+- **Strict equality** (`===`): no type conversion; `+0 === -0` true; `NaN === NaN` false.
+- **Abstract equality** (`==`): type conversions applied per spec.
+
+Prefer `===` for comparisons unless you intentionally want coercion and handle it explicitly.
+
+# 10.10 Relational operators (`<`, `<=`, `>`, `>=`)
+
+- If both operands are strings → lexicographic comparison (character code order).
+
+  - `'100' > '12'` is `false` (lexicographic).
+
+- If one is a string and the other number → convert the string to a number, then compare.
+
+  - `'3' > 2` → `true`.
+
+- Non-numeric string converts to `NaN` → relational comparisons with `NaN` are `false`.
+- `null` converts to `0` when compared with a number: `1 > null` → `true`.
+- `undefined` converts to `NaN` in numeric contexts, so comparisons involving `undefined` are usually `false`.
+
+Use explicit conversion and be careful with mixed-type relational comparisons.
+
+# 10.11 Inequality operators (`!=`, `!==`)
+
+- `!=` is the inverse of `==` (with coercion).
+- `!==` is the inverse of `===` (strict, no coercion).
+
+Prefer `!==` to avoid coercion surprises.
+
+# 10.12 Grouping Boolean expressions
+
+Use parentheses to make complex Boolean logic readable and correct:
+
+```js
+if ((age >= 18 && height >= 5.11) || (status === "royalty" && hasInvitation)) {
+  // allowed
+}
+```
+
+Consider assigning intermediate boolean variables to make intent explicit.
+
+# 10.13 Bitfields (compact multi-state flags)
+
+A bitfield packs boolean flags into a number (up to 32 bits). Useful for fast checks and compact state.
+
+```js
+const KEY_U = 1; // 0001
+const KEY_D = 2; // 0010
+const KEY_L = 4; // 0100
+const KEY_R = 8; // 1000
+
+// set flags
+bitfield |= KEY_U; // turn on Up
+// clear flag
+bitfield &= ~KEY_U; // turn off Up
+// check exact match
+if ((bitfield & (KEY_U | KEY_L)) === (KEY_U | KEY_L)) {
+  /* Up and Left */
+}
+// check presence
+if (bitfield & KEY_U) {
+  /* Up is pressed */
+}
+```
+
+Bitfields are compact and fast, but less readable. Use constants and helper functions for maintainability.
+
+# 10.14 Practical helper functions
+
+```js
+// safe equality for instants (no coercion)
+const eqStrict = (a, b) => a === b;
+
+// robust NaN-aware equality like SameValue
+const sameValue = (x, y) =>
+  Object.is
+    ? Object.is(x, y)
+    : x === y
+    ? x !== 0 || 1 / x === 1 / y
+    : x !== x && y !== y;
+
+// safe numeric compare
+const numEq = (a, b) => Number(a) === Number(b);
+
+// check valid Date
+const isValidDate = (d) => d instanceof Date && !Number.isNaN(d.getTime());
+```
+
+# 10.15 Practical rules — TL;DR
+
+- Use `===` and `!==` unless you intentionally want coercion.
+- When comparing numbers or doing math, coerce explicitly with `Number()` or `parse*`.
+- To detect `NaN`, use `Number.isNaN()` or `value !== value`.
+- Watch out for falsy-but-valid values: `0`, `''`, `false`.
+- Use `Object.is()` if you need NaN equality or to distinguish +0 and -0.
+- Use bitfields for compact multi-flag handling, but wrap operations in named constants and helpers.
