@@ -1214,3 +1214,311 @@ Object.prototype.toString.call(Error());
 | `Object.prototype.toString.call` | Precise internal class               | Verbose, not widely known by beginners             |
 
 This is the hierarchy you should fall back on when accuracy matters.
+
+# Chapter 7. Strings
+
+Comprehensive, practical summary of string handling in JavaScript. Includes modern (ES6+) approaches and important edge-case warnings.
+
+## 7.1 Basic info and creation
+
+- Strings may be written with single quotes, double quotes, or backticks (template literals).
+
+```js
+let s1 = "Hello";
+let s2 = "world";
+let s3 = `Hello World`; // template literal (ES2015+)
+```
+
+- Convert values to strings:
+
+```js
+String(32); // "32"
+(5232).toString(); // "5232"
+false.toString(); // "false"
+String.fromCharCode(104, 101, 108, 108, 111); // "hello"
+```
+
+- **Avoid** `new String("...")` that creates a `String` object (type "object") instead of a primitive string:
+
+```js
+let objString = new String("hi");
+typeof objString; // "object"
+typeof objString.valueOf(); // "string"
+```
+
+- Strings are **immutable**. Methods return new strings.
+
+## 7.1.1 Concatenation
+
+- `+` operator:
+
+```js
+"Foo" + "Bar"; // "FooBar"
+"Foo" + " " + "Bar"; // "Foo Bar"
+"string" + 32 + true; // "string32true"
+```
+
+- `.concat()`:
+
+```js
+"Foo".concat("Bar"); // "FooBar"
+```
+
+## 7.1.2 Template literals (ES6+)
+
+- Interpolation and multi-line strings:
+
+```js
+let place = `World`;
+let greet = `Hello ${place}!`; // "Hello World!"
+```
+
+- `String.raw` preserves backslashes:
+
+```js
+`a\\b`; // "a\b"
+String.raw`a\\b`; // "a\\b"
+```
+
+## 7.2 Reversing strings - pitfalls & approaches
+
+### Naive approach (works for BMP-only strings)
+
+```js
+function reverseString(str) {
+  return str.split("").reverse().join("");
+}
+```
+
+**Problem:** fails for surrogate pairs and combining marks (emoji, many non-Latin scripts).
+
+### Safer modern approaches
+
+- Using spread or `Array.from` (better with Unicode code points):
+
+```js
+[...String(str)].reverse().join("");
+Array.from(str).reverse().join("");
+```
+
+These handle many astral symbols correctly because they operate on user-perceived characters rather than UTF-16 code units.
+
+### Manual approach
+
+```js
+function reverseLoop(s) {
+  let r = "";
+  for (let i = s.length - 1; i >= 0; i--) r += s[i];
+  return r;
+}
+```
+
+Still subject to surrogate/combining-mark issues.
+
+## 7.3 Comparing strings (lexicographic)
+
+- `localeCompare()` recommended for locale-aware comparisons:
+
+```js
+"hello".localeCompare("world"); // negative
+```
+
+- Simple comparator for sorting (non-locale-sensitive):
+
+```js
+function strcmp(a, b) {
+  if (a === b) return 0;
+  return a > b ? 1 : -1;
+}
+arr.sort((a, b) => a.localeCompare(b));
+```
+
+## 7.4 Accessing characters
+
+- `charAt(index)` and bracket indexing:
+
+```js
+let s = "Hello";
+s.charAt(4); // "o"
+s[4]; // "o"
+```
+
+- `charCodeAt(index)` returns UTF-16 code unit value:
+
+```js
+"Hello".charCodeAt(4); // 111
+```
+
+- For full Unicode code points (astral characters) use `codePointAt` (ES6+):
+
+```js
+"😀".codePointAt(0); // 128512
+```
+
+## 7.5 Escaping quotes
+
+- Escape using backslash:
+
+```js
+let a = "L'albero";
+let b = 'I feel "high"';
+```
+
+- Use template literals to avoid many escapes:
+
+```js
+let t = `He said "it's fine"`;
+```
+
+- When embedding HTML, you may also use entities `&apos;` and `&quot;` as appropriate.
+
+## 7.6 Word/character/line counter (example)
+
+```js
+function wordCount(val) {
+  const words = val.match(/\S+/g);
+  return {
+    charactersNoSpaces: val.replace(/\s+/g, "").length,
+    characters: val.length,
+    words: words ? words.length : 0,
+    lines: val.split(/\r*\n/).length,
+  };
+}
+```
+
+## 7.7 Trimming whitespace
+
+- Standard:
+
+```js
+"  hello  ".trim(); // "hello"
+```
+
+- Variants (some engines polyfilled until standardization):
+
+```js
+" this ".trimStart(); // "this "
+" this ".trimEnd(); // " this"
+```
+
+## 7.8 Splitting and joining
+
+```js
+let s = "one, two, three";
+s.split(", "); // ["one", "two", "three"]
+s.split(", ").join("--"); // "one--two--three"
+```
+
+## 7.9 Unicode
+
+- JavaScript strings are sequences of UTF-16 code units representing Unicode text.
+- `charCodeAt` returns a UTF-16 code unit. For code points beyond BMP, use `codePointAt` and iterate with `for...of`, `Array.from`, or spread (`[...str]`).
+
+## 7.10 Detecting a string
+
+- Primitive string:
+
+```js
+typeof value === "string";
+```
+
+- String object:
+
+```js
+value instanceof String;
+```
+
+- Combined helper:
+
+```js
+function isString(v) {
+  return typeof v === "string" || v instanceof String;
+}
+```
+
+- Or use `Object.prototype.toString.call(v) === "[object String]"` for robustness.
+
+## 7.11 Substrings with `slice`
+
+```js
+let s = "0123456789abcdefg";
+s.slice(0, 5); // "01234"
+s.slice(10); // "abcdefg"
+```
+
+`slice` accepts negative indices.
+
+## 7.12 Character codes vs code points
+
+- `charCodeAt(index)` → UTF-16 code unit (0–65535).
+- `codePointAt(index)` → full Unicode code point (ES6+), required for astral characters.
+
+## 7.13 Number ⇄ String conversions (radix)
+
+- `num.toString(radix)` converts to base 2–36:
+
+```js
+(12).toString(16); // "c"
+```
+
+- `parseInt(str, radix)` parses back:
+
+```js
+parseInt("c", 16); // 12
+```
+
+- For fractional conversions between bases, split integer and fraction parts and convert accordingly (careful with floating-point precision).
+
+## 7.14 Find and replace
+
+- `indexOf`, `lastIndexOf`, `includes`:
+
+```js
+"Hello".indexOf("l"); // 2
+"Hello".lastIndexOf("l"); // 3
+"Hello".includes("ll"); // true
+```
+
+- `replace` (does not mutate original string):
+
+```js
+let s = "Hello, World!";
+s.replace("Hello", "Bye"); // "Bye, World!"
+s.replace(/W.{3}d/g, "Universe"); // "Bye, Universe!"
+```
+
+- `replace` with function for dynamic replacements (capture groups passed to replacer).
+
+## 7.15 Index of substring with start position
+
+```js
+"Hellow World".indexOf("Wor"); // 7
+"harr dee harr dee harr".indexOf("dee", 10); // 14
+```
+
+`indexOf` is case-sensitive.
+
+## 7.16 / 7.17 Case conversion
+
+```js
+"qwerty".toUpperCase(); // "QWERTY"
+"QWERTY".toLowerCase(); // "qwerty"
+```
+
+## 7.18 Repeating strings
+
+- ES6:
+
+```js
+"abc".repeat(3); // "abcabcabc"
+"abc".repeat(0); // ""
+// "abc".repeat(-1); // RangeError
+```
+
+- Pre-ES6 common idiom:
+
+```js
+new Array(n + 1).join("abc");
+```
+
+(Prefer `repeat` or a polyfill for clarity.)
