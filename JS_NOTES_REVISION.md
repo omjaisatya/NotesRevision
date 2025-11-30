@@ -2331,3 +2331,555 @@ function act(op) {
   (actions[op] || (() => 0))();
 }
 ```
+
+# Chapter 12. Arrays
+
+Comprehensive, practical reference for arrays - creation, conversion, iteration, transformation, mutation, and common utilities. Examples use modern idiomatic JavaScript and show backward-compatible alternatives where relevant.
+
+## 12.1 Array-like objects → Arrays
+
+**Array-like objects** have numeric keys and a `length` property (examples: `arguments`, `NodeList`, `HTMLCollection`). They do not inherit `Array.prototype`.
+
+Convert to a real array:
+
+- ES6+
+
+```js
+Array.from(arrayLike);
+[...arrayLike];
+Object.values(arrayLike); // when keys are 0..n-1
+```
+
+- ES5 (and older)
+
+```js
+Array.prototype.slice.call(arrayLike); // or [].slice.call(arrayLike)
+```
+
+Call array methods directly on array-like objects:
+
+```js
+Array.prototype.forEach.call(domList, fn);
+[].forEach.bind(arrayLike)(fn);
+```
+
+`Array.from` accepts a map function:
+
+```js
+Array.from(domList, (el) => el.tagName);
+```
+
+## 12.2 Reducing values (`Array.prototype.reduce`)
+
+`reduce` collapses an array into a single value.
+
+Sum:
+
+```js
+[1, 2, 3, 4].reduce((a, b) => a + b, 0); // 10
+```
+
+Flatten array of objects to an object:
+
+```js
+// ES5
+array.reduce(function (obj, cur) {
+  obj[cur.key] = cur.value;
+  return obj;
+}, {});
+
+// ES6
+array.reduce((obj, cur) => Object.assign(obj, { [cur.key]: cur.value }), {});
+// or with spread (beware performance)
+array.reduce((o, c) => ({ ...o, [c.key]: c.value }), {});
+```
+
+Map using reduce (illustrative - prefer `map`):
+
+```js
+function map(list, fn) {
+  return list.reduce((acc, item) => acc.concat(fn(item)), []);
+}
+```
+
+Find min/max:
+
+```js
+arr.reduce((a, b) => Math.min(a, b), Infinity);
+```
+
+Unique values:
+
+```js
+arr.reduce((prev, n) => {
+  if (prev.indexOf(n) === -1) prev.push(n);
+  return prev;
+}, []);
+```
+
+## 12.3 Mapping values (`map`)
+
+Create a new array from an existing one.
+
+```js
+["one", "two", "three"].map((s) => s.length); // [3,3,5]
+```
+
+Callback receives `value, index, array`. Optional second argument sets `this`.
+
+## 12.4 Filtering (`filter`)
+
+Return elements that pass a predicate.
+
+```js
+[5, 32, 43, 4].filter((n) => n % 2 !== 0); // [5,43]
+
+people.filter((p) => p.age < 35);
+```
+
+Quick remove falsy values:
+
+```js
+[0, undefined, {}, null, "", true, 5].filter(Boolean); // [{}, true, 5]
+```
+
+## 12.5 Sorting (`sort`)
+
+`sort()` mutates array. Default sorts as strings - often surprising.
+
+Numeric ascending:
+
+```js
+[100, 1000, 10, 1].sort((a, b) => a - b);
+```
+
+String locale order:
+
+```js
+arr.sort((a, b) => a.toString().localeCompare(b));
+```
+
+Sort by length:
+
+```js
+words.sort((a, b) => b.length - a.length); // longest first
+```
+
+Sort dates or anything numeric by difference:
+
+```js
+dates.sort((a, b) => b - a); // descending
+```
+
+Sort even/odd and then value:
+
+```js
+arr.sort((a, b) => (a & 1) - (b & 1) || a - b);
+```
+
+## 12.6 Iteration patterns
+
+- Traditional for:
+
+```js
+for (let i = 0; i < arr.length; i++) { ... }
+```
+
+- Reverse loop:
+
+```js
+for (let i = arr.length - 1; i >= 0; i--) { ... }
+```
+
+- `for...in` - iterates enumerable property keys - avoid for arrays (includes inherited keys).
+
+- `for...of` - iterate values (ES6):
+
+```js
+for (const v of myArray) { ... }
+```
+
+- `Array.prototype.forEach`:
+
+```js
+arr.forEach((v,i) => { ... });
+```
+
+Note: cannot `break` out of `forEach`.
+
+- `every` stops when predicate returns false - useful for partial iteration.
+- `some` stops when predicate returns true - useful for partial iteration.
+
+## 12.7 Destructuring arrays (ES6)
+
+```js
+const [len, height, hyp] = [3, 4, 5];
+const [, b, , c] = [1, 2, 3, 4]; // b=2, c=4
+const [a, b, ...rest] = [1, 2, 3, 4]; // rest = [3,4]
+function area([l, h]) {
+  return (l * h) / 2;
+}
+```
+
+## 12.8 Removing duplicates
+
+- Using `filter`:
+
+```js
+arr.filter((v, i, self) => self.indexOf(v) === i);
+```
+
+- Using `Set` (ES6):
+
+```js
+[...new Set(arr)];
+```
+
+## 12.9 Comparing arrays
+
+Simple shallow compare:
+
+```js
+JSON.stringify(a) === JSON.stringify(b); // works for JSON-serializable, non-cyclic
+```
+
+Deep recursive compare (handle cycles with care) - example provided earlier; be cautious of cycles.
+
+## 12.10 Reversing arrays
+
+In-place:
+
+```js
+[1, 2, 3].reverse(); // [3,2,1] - mutates original
+```
+
+Deep reverse - recursive for nested arrays (mutates).
+
+## 12.11 Shallow clone
+
+Shallow copy of an array:
+
+```js
+arr.slice();
+Array.from(arr);
+[...arr];
+```
+
+## 12.12 Concatenation
+
+- `concat` returns new array:
+
+```js
+arr1.concat(arr2, "c", "d");
+```
+
+- Spread:
+
+```js
+[...arr1, ...arr2, "c", "d"];
+```
+
+- Append without copying first array:
+
+```js
+longArray.push(...shortArray); // ES6
+// or longArray.push.apply(longArray, shortArray); // caution for very large arrays
+```
+
+## 12.13 Merge two arrays as key-value object
+
+```js
+const columns = ["Date", "Number", "Size"];
+const rows = ["2001", "5", "Big"];
+const result = rows.reduce((res, field, i) => {
+  res[columns[i]] = field;
+  return res;
+}, {});
+```
+
+## 12.14 Spread / Rest
+
+- Spread in arrays:
+
+```js
+[1, 2, 3, ...[4, 5, 6]];
+Math.max(...nums);
+```
+
+- Rest in destructuring / function args:
+
+```js
+const [x, y, ...rest] = [1, 2, 3, 4];
+function fn(a, b, ...rest) {}
+```
+
+## 12.15 Filtering examples
+
+Filter by predicate:
+
+```js
+[1, 2, 3, 4, 5].filter((v) => v > 2); // [3,4,5]
+```
+
+Filter words starting with letter:
+
+```js
+words.filter((w) => w && w[0].toLowerCase() === "a");
+```
+
+## 12.16 Searching arrays
+
+- Find element:
+
+```js
+people.find((p) => p.name === "bob");
+```
+
+- Find index:
+
+```js
+arr.findIndex((x) => x.value === 3); // -1 if not found
+```
+
+## 12.17 String ↔ Array
+
+- Split into array:
+
+```js
+"StackOverflow".split(""); // characters
+[..."string"]; // spread - preserves Unicode code points better for many cases
+```
+
+## 12.18 Removing items
+
+- Remove first:
+
+```js
+arr.shift(); // returns removed element, mutates
+```
+
+- Remove last:
+
+```js
+arr.pop();
+```
+
+- Splice remove/insert:
+
+```js
+arr.splice(index, count, ...items); // returns removed items
+```
+
+- `delete arr[index]` leaves hole - use only when you want to keep length and create undefined at index.
+
+- Resize:
+
+```js
+arr.length = 2; // truncates or extends with undefined
+```
+
+## 12.19 Clearing arrays
+
+- Reassign (new reference):
+
+```js
+arr = [];
+```
+
+- Clear in-place (preserve references - preferred when others hold reference):
+
+```js
+arr.length = 0;
+```
+
+- `arr.splice(0)` returns removed items - less efficient.
+
+## 12.20 Min / Max
+
+- Using apply (older):
+
+```js
+Math.min.apply(null, arr);
+```
+
+- Using spread (ES6):
+
+```js
+Math.min(...arr);
+```
+
+- Using reduce:
+
+```js
+arr.reduce((a, b) => Math.min(a, b), Infinity);
+```
+
+## 12.21 Initialization options
+
+- Literal:
+
+```js
+[1, 2, 3];
+```
+
+- `new Array(n)` creates array of length `n` with holes - be careful.
+- `Array.of(23)` creates `[23]` (unlike `Array(23)`).
+- `Array.from({length:5}, (_,i)=>i*i)` builds arrays programmatically.
+
+## 12.22 Join to string
+
+```js
+[1, 800, 555, 1234].join("-"); // "1-800-555-1234"
+```
+
+## 12.23 Splice for add/remove
+
+Remove first occurrence of value:
+
+```js
+const i = values.indexOf(3);
+if (i >= 0) values.splice(i, 1);
+```
+
+Insert at index:
+
+```js
+arr.splice(index, 0, item);
+```
+
+## 12.24 `entries()` (ES6)
+
+Iterate index/value pairs:
+
+```js
+for (const [i, el] of arr.entries()) {
+  console.log(i, el);
+}
+```
+
+## 12.25 Remove by value - copy or mutate
+
+Copy without value:
+
+```js
+const filtered = arr.filter((v) => v !== toRemove);
+```
+
+Mutate and remove all occurrences:
+
+```js
+let index;
+while ((index = arr.indexOf(toRemove)) !== -1) {
+  arr.splice(index, 1);
+}
+```
+
+Remove first:
+
+```js
+const idx = arr.indexOf(toRemove);
+if (idx !== -1) arr.splice(idx, 1);
+```
+
+## 12.26 Flattening arrays
+
+- Shallow flatten (one level):
+
+```js
+[].concat(...arr); // ES6 spread
+// or
+[].concat.apply([], arr); // ES5
+```
+
+- Deep flatten for numbers using `toString` hack - only works for arrays of numbers:
+
+```js
+deeplyNested.toString().split(",").map(Number);
+```
+
+For general objects and nested heterogeneous arrays, use a recursive flatten or `arr.flat(depth)` (ES2019).
+
+## 12.27 Append / Prepend
+
+- Prepend:
+
+```js
+arr.unshift(1, 2); // returns new length
+```
+
+- Append:
+
+```js
+arr.push(4, 5);
+```
+
+## 12.28 Object keys/values → array of pairs
+
+```js
+const obj = { k1: 10, k2: 3 };
+const arr = Object.keys(obj).map((k) => [k, obj[k]]);
+// or (ES2017)
+Object.entries(obj); // [['k1',10], ['k2',3]]
+```
+
+## 12.29 Logical connectives - `.some` and `.every`
+
+- `.some(fn)` returns true if any element satisfies predicate (OR).
+- `.every(fn)` returns true if all elements satisfy predicate (AND).
+
+Examples:
+
+```js
+[2, 4, 7, 9].some((x) => x % 2 !== 0); // true
+[1, 1, 1].every((x, i, arr) => x === arr[0]); // true
+```
+
+## 12.30 Check array identity
+
+- Detect array:
+
+```js
+Array.isArray(obj);
+```
+
+- `instanceof Array` works but can fail if prototype changed or across frames.
+
+## 12.31 Insert helper (example)
+
+Insert at index:
+
+```js
+arr.splice(index, 0, item);
+```
+
+Optional `insert` extension (mutating) - avoid modifying prototypes in production.
+
+## 12.32 Sort multidimensional arrays
+
+Sort by second column:
+
+```js
+array.sort((a, b) => a[1] - b[1]);
+```
+
+## 12.33 Test all array items for equality
+
+```js
+arr.every((item, i, list) => item === list[0]);
+```
+
+For objects, compare a property:
+
+```js
+data.every((item, i, list) => item.name === list[0].name);
+```
+
+## 12.34 Copy part of array (`slice`)
+
+Shallow copy a range:
+
+```js
+arr.slice(begin, end); // end excluded
+arr.slice(0, 2); // first two elements
+arr.slice(4); // from index 4 to end
+```
