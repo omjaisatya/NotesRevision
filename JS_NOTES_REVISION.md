@@ -2883,3 +2883,408 @@ arr.slice(begin, end); // end excluded
 arr.slice(0, 2); // first two elements
 arr.slice(4); // from index 4 to end
 ```
+
+# Chapter 13. Objects
+
+JavaScript objects are dynamic collections of properties. Each property has a **descriptor** that defines its behavior.
+
+### Property descriptor fields
+
+| Field          | Meaning                                                |
+| -------------- | ------------------------------------------------------ |
+| `value`        | Stored value (data property).                          |
+| `writable`     | Whether you can reassign the value.                    |
+| `enumerable`   | Whether it appears in `for...in` or `Object.keys`.     |
+| `configurable` | Whether descriptor can be changed or property deleted. |
+| `get`          | Getter function (replaces `value`).                    |
+| `set`          | Setter function (replaces `value`).                    |
+
+A property is **either** a data property (`value`, `writable`) **or** an accessor property (`get`, `set`). Never both.
+
+## 13.1 Shallow cloning
+
+### ES6+
+
+```js
+const existing = { a: 1, b: 2 };
+const clone = Object.assign({}, existing);
+```
+
+Using object spread:
+
+```js
+const { ...clone } = existing;
+```
+
+### ES5 fallback
+
+```js
+var clone = {};
+for (var key in existing) {
+  if (existing.hasOwnProperty(key)) clone[key] = existing[key];
+}
+```
+
+Shallow means nested objects are still the same reference.
+
+## 13.2 Object.freeze
+
+Prevents:
+
+- adding properties
+- removing properties
+- modifying descriptors
+- changing existing values
+
+Does **not** deep-freeze child objects.
+
+```js
+const obj = {
+  foo: "foo",
+  bar: [1, 2, 3],
+  nested: { x: 1 },
+};
+Object.freeze(obj);
+
+obj.newProp = true; // ignored
+obj.foo = "nope"; // ignored
+delete obj.foo; // ignored
+
+obj.bar.push(4); // allowed (bar is not frozen)
+obj.nested.x = 99; // allowed
+```
+
+Strict mode throws instead of silently failing.
+
+## 13.3 Deep cloning
+
+No built-in deep clone. Use:
+
+### For simple JSON-safe objects:
+
+```js
+const copy = JSON.parse(JSON.stringify(obj));
+```
+
+Breaks:
+
+- functions
+- Dates → become strings
+- undefined and symbols
+- cyclic objects
+
+### Manual deep clone example (handles arrays, objects, dates, detects cycles):
+
+Provided in original text; core idea:
+
+```js
+function deepClone(obj, seen = []) {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (seen.includes(obj)) throw new Error("Circular");
+
+  seen.push(obj);
+
+  if (obj instanceof Date) return new Date(obj.getTime());
+  if (Array.isArray(obj)) return obj.map((x) => deepClone(x, seen));
+
+  const result = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) result[key] = deepClone(obj[key], seen);
+  }
+  return result;
+}
+```
+
+## 13.4 Iterating over properties
+
+### Old-school and dangerous:
+
+```js
+for (const key in obj) {
+  if (obj.hasOwnProperty(key)) console.log(key);
+}
+```
+
+### Better:
+
+```js
+Object.keys(obj); // enumerable own keys
+Object.getOwnPropertyNames(obj); // all own keys including non-enumerable
+Object.entries(obj); // [key, value] pairs
+Object.values(obj); // values
+```
+
+## 13.5 Object.assign
+
+Copies enumerable own properties from sources into target:
+
+```js
+const user = { first: "John" };
+Object.assign(user, { last: "Doe", age: 39 });
+```
+
+Shallow cloning:
+
+```js
+const clone = Object.assign({}, user);
+```
+
+Merge multiple:
+
+```js
+Object.assign(obj1, obj2, obj3);
+```
+
+Primitives: strings contribute indexed character properties; `null` and `undefined` ignored.
+
+## 13.6 Object spread/rest
+
+Syntactic sugar for shallow merges:
+
+```js
+const obj = { a: 1 };
+const merged = { ...obj, b: 2 };
+```
+
+Equivalent to:
+
+```js
+Object.assign({}, obj, { b: 2 });
+```
+
+Shallow, not deep.
+
+## 13.7 Object.defineProperty
+
+Define property with explicit descriptor:
+
+```js
+const obj = {};
+Object.defineProperty(obj, "foo", {
+  value: "bar",
+  writable: true,
+  configurable: true,
+  enumerable: true,
+});
+```
+
+Multiple:
+
+```js
+Object.defineProperties(obj, {
+  a: { value: 1 },
+  b: { value: 2, writable: false },
+});
+```
+
+## 13.8 Accessor properties (getters/setters)
+
+```js
+const person = { name: "John", surname: "Doe" };
+
+Object.defineProperty(person, "fullName", {
+  get() {
+    return this.name + " " + this.surname;
+  },
+  set(value) {
+    [this.name, this.surname] = value.split(" ");
+  },
+});
+```
+
+Cannot mix `value/writable` with `get/set`.
+
+## 13.9 Dynamic property names
+
+Use bracket notation:
+
+```js
+dictionary[word];
+obj[propertyName] = 1;
+```
+
+Computed keys in object literal:
+
+```js
+const key = "test";
+const obj = { [key]: 1 };
+```
+
+## 13.10 Arrays are Objects
+
+Arrays are objects with:
+
+- numeric keys
+- a `length` property
+- `Array.prototype` as prototype
+
+Array-like objects (like NodeList) mimic arrays but lack array methods.
+
+Use:
+
+```js
+Array.from(nodeList);
+```
+
+## 13.11 Object.seal
+
+Prevents adding or removing properties, but allows modifying values.
+
+```js
+const obj = { foo: "foo" };
+Object.seal(obj);
+
+obj.foo = "new"; // allowed
+obj.newProp = 1; // ignored or TypeError in strict mode
+delete obj.foo; // ignored
+```
+
+## 13.12 Convert values to array
+
+```js
+const values = Object.keys(obj).map((k) => obj[k]);
+// Or simply:
+Object.values(obj); // ES8+
+```
+
+## 13.13 Retrieving properties
+
+Summary:
+
+| Method                       | Own?    | Enumerable? | Prototype? |
+| ---------------------------- | ------- | ----------- | ---------- |
+| `for...in`                   | ✔       | ✔           | ✔          |
+| `Object.keys`                | ✔       | ✔           | ✖          |
+| `Object.getOwnPropertyNames` | ✔       | ✔ + ✖       | ✖          |
+| custom recursion             | depends | depends     | ✔          |
+
+## 13.14 Read-only property
+
+```js
+Object.defineProperty(obj, "foo", {
+  value: "original",
+  writable: false,
+});
+```
+
+Assignments silently fail.
+
+## 13.15 Non-enumerable properties
+
+```js
+Object.defineProperty(obj, "secret", {
+  value: 123,
+  enumerable: false,
+});
+```
+
+Won’t show in:
+
+- `for...in`
+- `Object.keys`
+
+## 13.16 Lock property descriptor (`configurable: false`)
+
+Prevents:
+
+- changing descriptor
+- converting between data and accessor
+- deletion
+
+```js
+Object.defineProperty(obj, "foo", {
+  value: "x",
+  configurable: false,
+});
+```
+
+## 13.17 Object.getOwnPropertyDescriptor
+
+```js
+Object.getOwnPropertyDescriptor(obj, "hello");
+```
+
+Shows full descriptor.
+
+## 13.18 Summary of descriptor behavior
+
+- Data property: `{ value, writable }`
+- Accessor: `{ get, set }`
+- Shared: `{ enumerable, configurable }`
+
+Default descriptor for literal object properties:
+
+```js
+{ value: X, writable: true, enumerable: true, configurable: true }
+```
+
+## 13.19 Object.keys
+
+```js
+Object.keys(obj); // ['a','b','c']
+```
+
+Enumerates enumerable own properties.
+
+## 13.20 Special property names
+
+Use bracket syntax for:
+
+- spaces
+- unicode
+- numeric property names
+- reserved words
+
+```js
+obj["weird key"] = 1;
+obj[123] = 2;
+```
+
+## 13.21 Creating iterable objects
+
+Implement `[Symbol.iterator]`:
+
+```js
+const iterable = {
+  [Symbol.iterator]() {
+    let done = false;
+    return {
+      next() {
+        if (!done) {
+          done = true;
+          return { done: false, value: "One" };
+        }
+        return { done: true };
+      },
+    };
+  },
+};
+
+for (const x of iterable) console.log(x);
+```
+
+## 13.22 Object.entries
+
+ES8:
+
+```js
+Object.entries(obj);
+// [['one',1], ['two',2]]
+```
+
+Useful for destructuring iteration:
+
+```js
+for (const [k,v] of Object.entries(obj)) { ... }
+```
+
+## 13.23 Object.values
+
+ES8:
+
+```js
+Object.values({ 0: "a", 1: "b" });
+// ['a','b']
+```
+
+Equivalent order to `for...in` for enumerable own properties.
