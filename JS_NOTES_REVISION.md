@@ -3826,3 +3826,194 @@ class Cat {
 ```
 
 Under the hood, this is still prototype-based. It's not more “OOP” than constructors. Just less boilerplate.
+
+# Chapter 17 . Declarations and Assignments
+
+## 17.1 Modifying constants
+
+`const` prevents **rebinding**, not mutation.
+People screw this up constantly.
+
+```js
+const person = { name: "John" };
+
+person.name = "Steve"; // allowed
+person.surname = "Fox"; // allowed
+person = {}; // TypeError
+```
+
+A `const` binding must always point to the same value, but the **value itself can mutate** if it’s an object.
+
+If you want immutability, you need `Object.freeze` or a persistent data structure library.
+`const` alone does nothing magical.
+
+## 17.2 Declaring and initializing constants
+
+You must initialize a `const` immediately:
+
+```js
+const foo = 100;
+const obj = { name: "John" };
+const fn = function () {};
+const arrow = () => {};
+```
+
+This will always fail:
+
+```js
+const x; // SyntaxError
+```
+
+`const` is not “constant data”, it’s “constant binding”.
+
+## 17.3 Variable declaration (the truth, not the textbook)
+
+There are four ways to create variables:
+
+### 1. `var`
+
+- function scoped
+- hoisted
+- ignore block scope
+- avoid unless maintaining legacy code
+
+### 2. `let`
+
+- block scoped
+- safe default for mutable bindings
+
+### 3. `const`
+
+- block scoped
+- cannot be reassigned
+- safe default for most variables
+
+### 4. Bare assignment (accidental globals)
+
+```js
+x = 10; // creates a global variable in sloppy mode
+```
+
+This is a mistake 99 percent of the time.
+It **does not work in strict mode** and should never be used intentionally.
+
+## 17.4 Undefined vs undeclared
+
+Two totally different things.
+
+```js
+var a;
+console.log(a); // undefined
+```
+
+`undefined` means “declared, but no value was assigned”.
+
+Undeclared variables:
+
+```js
+console.log(b); // ReferenceError
+```
+
+But `typeof` lies on purpose:
+
+```js
+typeof b === "undefined"; // true
+```
+
+This is intentional so `typeof` can be used in feature detection without crashing.
+
+## 17.5 Data Types
+
+JavaScript is dynamically typed, meaning variables don’t have types; **values do**.
+
+```js
+var x = undefined;
+x = 5; // number
+x = "John"; // string
+x = { a: 1 }; // object
+x = [1, 2, 3]; // array (still an object)
+```
+
+Don’t overthink “types”. What matters is how a value behaves.
+
+## 17.6 Math operations + assignment operators
+
+These are just shortcuts. Nothing magical.
+
+```js
+b += a; // b = b + a
+b -= a; // b = b - a
+b *= a; // b = b * a
+b /= a; // b = b / a
+b **= a; // b = b ** a (exponentiation)
+```
+
+Use them or don’t. They’re equivalent.
+
+## 17.7 Assignment and declaration rules you actually need to remember
+
+### Assignment
+
+```js
+a = 6;
+b = "Foo";
+```
+
+### Declaration + assignment
+
+```js
+var x = 6;
+let y = "Foo";
+const z = true;
+```
+
+### Multiple declarations
+
+```js
+let x,
+  y = 5;
+var a = 1,
+  b,
+  c = 2;
+```
+
+The order doesn’t matter:
+
+```js
+var a,
+  b = 10,
+  c,
+  d = "hi";
+```
+
+### Bare assignments create globals (dangerous)
+
+```js
+x = 5; // creates global in sloppy mode
+```
+
+This is why strict mode exists — to stop this exact bug.
+
+If you need an intentional global on `window`, be explicit:
+
+```js
+window.myGlobal = 123;
+```
+
+### Function declarations also create variables
+
+```js
+function foo() {}
+```
+
+A function declaration creates a binding (`foo`) in the current scope.
+
+## The real-world rule set you should internalize
+
+Here’s the practical summary that developers who actually ship code follow:
+
+1. **Use `const` by default.**
+2. **Use `let` when rebinding is needed.**
+3. **Never use `var` unless maintaining old code.**
+4. **Never use bare assignments.**
+5. **Understand that `const` doesn’t freeze objects.**
