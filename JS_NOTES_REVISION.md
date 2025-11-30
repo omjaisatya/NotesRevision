@@ -3711,3 +3711,118 @@ let packed = (a & 0xff) | ((b & 0xff) << 8) | ((c & 0xff) << 16);
 - **Floating inputs are coerced.** Non-integer numbers are converted to 32-bit integers via `ToInt32`.
 - **Not for big integers.** If you need bitwise operations on integers larger than 32 bits, use `BigInt` bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) with `BigInt` operands. Do not mix `Number` and `BigInt`.
 - **Readability vs micro-optimization.** Tricks like XOR-swapping exist but hurt readability. Use them only when there's a clear reason.
+
+# Chapter 16. Constructor Functions (The real rules that matter)
+
+## 16.1 Declaring a constructor function
+
+A **constructor function** is just a normal function that you call with `new`. When you do that:
+
+- JavaScript creates a brand-new empty object.
+- It sets that object’s internal prototype to `ConstructorFunction.prototype`.
+- Inside the function, `this` refers to that new object.
+- If you don’t explicitly return an object, JS returns `this` automatically.
+
+Example:
+
+```js
+function Cat(name) {
+  this.name = name;
+  this.sound = "Meow";
+}
+```
+
+Using it:
+
+```js
+let cat = new Cat("Tom");
+cat.sound; // "Meow"
+```
+
+If you forget `new`, you’ll pollute the global object or hit an error in strict mode. Don’t forget `new`.
+
+## Prototype inheritance with constructor functions
+
+Every function in JS has a `.prototype` object (except arrow functions).
+Objects created by the constructor inherit from that `.prototype`.
+
+```js
+Cat.prototype.speak = function () {
+  console.log(this.sound);
+};
+
+cat.speak(); // "Meow"
+```
+
+That method is not copied into each instance; all instances share it via the prototype chain.
+This is why you don’t define methods inside the constructor unless you intentionally want duplicate functions per object (wasteful).
+
+## The `.constructor` property
+
+Every object created with a constructor function has a `.constructor` that points back to the function:
+
+```js
+cat.constructor === Cat; // true
+```
+
+Don’t rely on `.constructor` too heavily. It can be changed or broken if you replace a prototype object:
+
+```js
+Cat.prototype = {};
+new Cat().constructor === Cat; // false now
+```
+
+If you must replace a prototype, you also need to fix `.constructor` manually:
+
+```js
+Cat.prototype = { constructor: Cat };
+```
+
+## instanceof behavior
+
+`instanceof` checks whether an object’s prototype chain includes `ConstructorFunction.prototype`.
+
+```js
+cat instanceof Cat; // true
+cat instanceof Object; // also true
+```
+
+Important: `instanceof` doesn’t check the constructor property, and it doesn’t check names. The prototype chain determines the result.
+
+## Common mistakes you should avoid
+
+Here are the ones beginners screw up all the time:
+
+1. **Forgetting `new`.**
+
+   ```js
+   const x = Cat("Tom"); // WRONG — this.name writes to global
+   ```
+
+2. **Putting methods inside the constructor.**
+   You end up with duplicated function objects on every instance.
+
+3. **Replacing the prototype without fixing `.constructor`.**
+
+4. **Expecting `instanceof` to behave like Java/C#.**
+   It doesn't check types the same way, only the prototype chain.
+
+## Quick comparison: constructor functions vs classes
+
+Constructor functions are the old-school way.
+`class` syntax does the same thing with cleaner syntax:
+
+```js
+class Cat {
+  constructor(name) {
+    this.name = name;
+    this.sound = "Meow";
+  }
+
+  speak() {
+    console.log(this.sound);
+  }
+}
+```
+
+Under the hood, this is still prototype-based. It's not more “OOP” than constructors. Just less boilerplate.
