@@ -3549,3 +3549,165 @@ Use for waves, animations, LFOs, etc.
 - Prefer `Math.trunc` over bitwise hacks for truncation when numbers may exceed 32-bit range.
 - Bitwise ops coerce to 32-bit signed integers — use with care.
 - When performance matters, avoid creating large temporary arrays (e.g., spreading very large arrays into `Math.max(...arr)` can blow the stack).
+
+# Chapter 15. Bitwise operators
+
+Bitwise operators work on the binary representation of numbers. JavaScript converts operands to **signed 32-bit integers** (two’s complement) before applying the operation, and the result is returned as a Number. Because of that conversion, bitwise ops are ideal for 32-bit integer work (flags, masks, fast integer math) but **not** for arbitrary large integers unless you use `BigInt`.
+
+## 15.0 How numbers are prepared (ToInt32 / two’s complement)
+
+- Before a bitwise operation, JavaScript performs a `ToInt32` conversion. This discards (shifts off) any bits beyond 32 bits.
+- Negative integers are represented in **two’s complement**: invert all bits (one’s complement) then add 1.
+  Example (4-bit two’s complement):
+
+  - `6` → `0110`
+  - invert → `1001` (one’s complement)
+  - add 1 → `1010` → represents `-6` in two’s complement.
+
+- Leading 1s on the left (sign extension) do not change the two’s complement value: `1010` and `1111111111010` both represent `-6` for a 32-bit view.
+
+## 15.1 Bitwise AND `&`
+
+Return `1` bit where **both** inputs have `1` at that position.
+
+```js
+13 & 7; // 5
+// 13:  01101
+//  7:  00111
+//res:  00101  => 5
+```
+
+Practical use:
+
+- **Parity / even-odd**: `n & 1` yields `1` for odd, `0` for even.
+- **Masking**: `value & mask` clears bits not in `mask`.
+
+## 15.2 Bitwise OR `|`
+
+Return `1` bit where **either** input has `1`.
+
+```js
+13 | 7; // 15
+// 13: 01101
+//  7: 00111
+//res: 01111 => 15
+```
+
+Practical use:
+
+- Combine flags: `flags |= FLAG_A;`
+
+## 15.3 Bitwise XOR `^` (exclusive OR)
+
+Return `1` where bits differ.
+
+```js
+13 ^ 7; // 10
+// 13: 01101
+//  7: 00111
+//res: 01010 => 10
+```
+
+Practical use:
+
+- Toggle bits: `flags ^= FLAG_A;`
+- Classic trick: swap two integers without temporary variable (works only for integers):
+
+```js
+let a = 11,
+  b = 22;
+a = a ^ b;
+b = a ^ b; // b = original a
+a = a ^ b; // a = original b
+```
+
+(Readable alternative: use a temp variable — modern engines optimize.)
+
+## 15.4 Bitwise NOT `~`
+
+Flip all bits (one’s complement). Because of two’s complement representation this behaves like `~x === -x - 1`.
+
+```js
+~13; // -14
+// 13:  0000...01101
+// ~13: 1111...10010 => -14 (two's complement)
+```
+
+## 15.5 Left shift `<<`
+
+Shift bits left; low bits shifted in on the right are `0`. Equivalent to multiplication by 2^n for integers (within 32-bit range).
+
+```js
+5 << 2; // 20
+// 5:   00000101
+// <<2: 00010100 => 20
+```
+
+Use for fast integer multiply by powers of two.
+
+## 15.6 Sign-propagating right shift `>>`
+
+Shift bits right, filling leftmost bits with the **sign bit** (preserves sign). Equivalent to dividing by 2^n and flooring toward -∞ for integers.
+
+```js
+(20 >>
+  (2 - // 5
+    5)) >>
+  3; // -1  (sign bit 1 is replicated)
+```
+
+## 15.7 Zero-fill right shift `>>>`
+
+Shift right and fill left bits with zeros. Converts negative numbers into large positive unsigned 32-bit values.
+
+```js
+-30 >>> 2; // 1073741816
+// -30 as 32-bit: 1111...00011110
+// >>>2 -> 001111...11000111 => a large positive number
+```
+
+Note: for non-negative numbers `>>` and `>>>` produce the same result.
+
+To coerce a Number to unsigned 32-bit integer: `x >>> 0`.
+
+## 15.8 Common practical patterns
+
+- **Check parity**
+
+```js
+if (n & 1) {
+  /* odd */
+} else {
+  /* even */
+}
+```
+
+- **Set / clear / toggle flags**
+
+```js
+flags |= FLAG_A; // set
+flags &= ~FLAG_A; // clear
+flags ^= FLAG_A; // toggle
+```
+
+- **Test a flag**
+
+```js
+if (flags & FLAG_A) {
+  /* FLAG_A present */
+}
+```
+
+- **Pack small integers into one 32-bit value** (carefully; watch bit widths and overflow)
+
+```js
+let packed = (a & 0xff) | ((b & 0xff) << 8) | ((c & 0xff) << 16);
+```
+
+## 15.9 Practical cautions & tips
+
+- **Limited to 32 bits.** Bitwise ops operate on signed 32-bit integers. Values outside that range will be truncated (high bits discarded).
+- **Signed result.** The internal result is signed 32-bit; use `>>> 0` to view it as unsigned (0..2^32-1).
+- **Floating inputs are coerced.** Non-integer numbers are converted to 32-bit integers via `ToInt32`.
+- **Not for big integers.** If you need bitwise operations on integers larger than 32 bits, use `BigInt` bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) with `BigInt` operands. Do not mix `Number` and `BigInt`.
+- **Readability vs micro-optimization.** Tricks like XOR-swapping exist but hurt readability. Use them only when there's a clear reason.
