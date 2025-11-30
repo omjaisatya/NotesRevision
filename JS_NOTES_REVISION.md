@@ -1848,7 +1848,7 @@ function isValidDate(d) {
 
 Clear, practical summary of equality, relational operators, coercion rules, short-circuiting, and useful patterns. Focus on what trips people up and how to avoid bugs.
 
-# 10.1 Abstract equality (`==`) and coercion - the problem
+## 10.1 Abstract equality (`==`) and coercion - the problem
 
 `==` performs type conversion when operand types differ. That coercion produces surprising results:
 
@@ -1870,7 +1870,7 @@ Number("") === 0; // true
 String(0) === "0"; // true
 ```
 
-# 10.2 NaN and comparisons
+## 10.2 NaN and comparisons
 
 `NaN` means Not a Number. It behaves oddly:
 
@@ -1898,7 +1898,7 @@ Number.isNaN =
 
 `Object.is()` (ES6) implements SameValue: `Object.is(NaN, NaN)` is `true`, and `Object.is(+0, -0)` is `false`.
 
-# 10.3 Short-circuiting with `&&` and `||`
+## 10.3 Short-circuiting with `&&` and `||`
 
 - `x && y`: evaluates `y` only if `x` is truthy. Useful to prevent errors and conditionally call functions.
 - `x || y`: evaluates `y` only if `x` is falsy. Good for defaults.
@@ -1931,7 +1931,7 @@ cb && cb(); // calls only if cb is truthy
 
 Be mindful: `0`, `""`, and `false` are valid values but are falsy. Using `||` for defaults may clobber them.
 
-# 10.4 null vs undefined
+## 10.4 null vs undefined
 
 - `null == undefined` → `true`
 - `null === undefined` → `false`
@@ -1947,7 +1947,7 @@ Do not assign `undefined` yourself. Use `null` for intentional emptiness and `ty
 if (typeof foo === "undefined") { ... }
 ```
 
-# 10.5 Abstract Equality Algorithm (summary)
+## 10.5 Abstract Equality Algorithm (summary)
 
 When `x == y`:
 
@@ -1960,7 +1960,7 @@ When `x == y`:
 
 This explains conversions like `0 == ''` and `false == '0'`.
 
-# 10.6 Logic operators with Booleans and non-boolean values
+## 10.6 Logic operators with Booleans and non-boolean values
 
 Boolean operators return the actual operand value, not strictly `true`/`false`.
 
@@ -1983,14 +1983,14 @@ Boolean operators return the actual operand value, not strictly `true`/`false`.
 
 Use these behaviours intentionally, but remember falsy values that might be legitimate (0, '', false).
 
-# 10.7 Automatic type conversions (gotchas)
+## 10.7 Automatic type conversions (gotchas)
 
 - `+` with a string concatenates: `5 + "7" === "57"`.
 - `-`, `*`, `/` coerce to numbers: `"5" - 2 === 3`.
 - Non-numeric string math → `NaN`: `"a" - "b" // NaN`.
 - When you rely on numeric math, convert explicitly with `Number()` or `parseInt/parseFloat`.
 
-# 10.8 Empty array and coercion oddity
+## 10.8 Empty array and coercion oddity
 
 `[] == false` is `true`.
 
@@ -2004,7 +2004,7 @@ But `[]` is truthy in boolean contexts:
 
 So remember: `==` combines shape conversions that can surprise you.
 
-# 10.9 Equality comparison variants - quick reference
+## 10.9 Equality comparison variants - quick reference
 
 - **SameValue** (use `Object.is`): strictest; `Object.is(NaN, NaN)` is `true`, `Object.is(+0, -0)` is `false`.
 - **SameValueZero** (used by `Array.prototype.includes`): like SameValue but `+0` and `-0` are treated as equal.
@@ -2013,7 +2013,7 @@ So remember: `==` combines shape conversions that can surprise you.
 
 Prefer `===` for comparisons unless you intentionally want coercion and handle it explicitly.
 
-# 10.10 Relational operators (`<`, `<=`, `>`, `>=`)
+## 10.10 Relational operators (`<`, `<=`, `>`, `>=`)
 
 - If both operands are strings → lexicographic comparison (character code order).
 
@@ -2029,14 +2029,14 @@ Prefer `===` for comparisons unless you intentionally want coercion and handle i
 
 Use explicit conversion and be careful with mixed-type relational comparisons.
 
-# 10.11 Inequality operators (`!=`, `!==`)
+## 10.11 Inequality operators (`!=`, `!==`)
 
 - `!=` is the inverse of `==` (with coercion).
 - `!==` is the inverse of `===` (strict, no coercion).
 
 Prefer `!==` to avoid coercion surprises.
 
-# 10.12 Grouping Boolean expressions
+## 10.12 Grouping Boolean expressions
 
 Use parentheses to make complex Boolean logic readable and correct:
 
@@ -2048,7 +2048,7 @@ if ((age >= 18 && height >= 5.11) || (status === "royalty" && hasInvitation)) {
 
 Consider assigning intermediate boolean variables to make intent explicit.
 
-# 10.13 Bitfields (compact multi-state flags)
+## 10.13 Bitfields (compact multi-state flags)
 
 A bitfield packs boolean flags into a number (up to 32 bits). Useful for fast checks and compact state.
 
@@ -2074,7 +2074,7 @@ if (bitfield & KEY_U) {
 
 Bitfields are compact and fast, but less readable. Use constants and helper functions for maintainability.
 
-# 10.14 Practical helper functions
+## 10.14 Practical helper functions
 
 ```js
 // safe equality for instants (no coercion)
@@ -2095,7 +2095,7 @@ const numEq = (a, b) => Number(a) === Number(b);
 const isValidDate = (d) => d instanceof Date && !Number.isNaN(d.getTime());
 ```
 
-# 10.15 Practical rules — TL;DR
+## 10.15 Practical rules — TL;DR
 
 - Use `===` and `!==` unless you intentionally want coercion.
 - When comparing numbers or doing math, coerce explicitly with `Number()` or `parse*`.
@@ -2103,3 +2103,231 @@ const isValidDate = (d) => d instanceof Date && !Number.isNaN(d.getTime());
 - Watch out for falsy-but-valid values: `0`, `''`, `false`.
 - Use `Object.is()` if you need NaN equality or to distinguish +0 and -0.
 - Use bitfields for compact multi-flag handling, but wrap operations in named constants and helpers.
+
+# Chapter 11. Conditions
+
+Practical, compact guide to conditionals in JavaScript: ternaries, `if/else`, `switch`, short-circuiting, common pitfalls, and a cleaner alternative (strategy pattern).
+
+## 11.1 Ternary operator (`? :`)
+
+A concise single-expression `if/else`. Useful for returning a value or inline assignment.
+
+```js
+const animal = "kitty";
+const result = animal === "kitty" ? "cute" : "still nice";
+```
+
+- Ternary is an expression — it **returns** a value and can be assigned.
+- The else branch is mandatory (syntax requires it). If you only need side effects, use a normal `if`.
+- You **cannot** use control statements like `break` or `return` inside the two branches directly (they are statements). You can return the entire ternary:
+
+```js
+return animal === "kitty" ? "meow" : "woof";
+```
+
+- Comma operator can be used in branches but hurts readability:
+
+```js
+let a = 0,
+  str = "not a";
+let b = a === 0 ? ((a = 1), (str += " test")) : (a = 2);
+// b === 'not a test'
+```
+
+- Nested ternaries are legal but degrade readability. Prefer parentheses and short expressions if you must:
+
+```js
+const v = foo ? (bar ? 1 : 2) : 3;
+```
+
+If it gets complex, switch to `if/else` or refactor into functions.
+
+## 11.2 `switch` statement
+
+`switch` tests an expression against case values and executes the matching block.
+
+```js
+switch (value) {
+  case 1:
+    console.log("I will run if value === 1");
+    break;
+  case 2:
+    console.log("I will run if value === 2");
+    break;
+  default:
+    console.log("no match");
+}
+```
+
+- **`break` matters** — without `break` execution falls through to the next case. Useful intentionally for shared behavior:
+
+```js
+switch (x) {
+  case "a":
+  case "b":
+  case "c":
+    console.log("a, b, or c");
+    break;
+  case "d":
+    console.log("only d");
+    break;
+}
+```
+
+- Case expressions may be any expression (function calls, concatenation, etc.). They are compared with `===` semantics (no coercion).
+- Use `default` for fallback logic.
+
+## 11.3 `if / else if / else`
+
+Basic conditional flow:
+
+```js
+if (i < 1) {
+  console.log("i is smaller than 1");
+} else if (i < 2) {
+  console.log("i is smaller than 2");
+} else {
+  console.log("none matched");
+}
+```
+
+Key notes:
+
+- Only the first true branch executes — subsequent `else if`s are skipped.
+- Curly braces are optional for single statements but **always use braces** for multi-statement blocks to avoid bugs:
+
+```js
+if (i < 1) console.log("i < 1");
+console.log("this runs regardless"); // likely a bug if you intended it to be conditional
+```
+
+- Conditions are coerced to booleans (truthy / falsy). Use `===` / `!==` when you need type-safe comparisons.
+
+---
+
+## 11.4 Strategy pattern (object dispatch) — nicer alternative to big `switch`
+
+When you have many cases or dynamic keys, use an object mapping to functions. It's easier to test and extend.
+
+```js
+const AnimalSays = {
+  dog() {
+    return "woof";
+  },
+  cat() {
+    return "meow";
+  },
+  lion() {
+    return "roar";
+  },
+  default() {
+    return "moo";
+  },
+};
+
+function makeAnimalSpeak(animal) {
+  const speak = AnimalSays[animal] || AnimalSays.default;
+  console.log(`${animal} says ${speak()}`);
+}
+```
+
+- Benefits: scalable, testable, no fall-through bugs, easy to extend at runtime.
+- Add validation or use `hasOwnProperty` if you worry about prototype pollution.
+
+## 11.5 Short-circuiting with `||` and `&&`
+
+Use these to guard expressions, provide defaults, or conditionally execute:
+
+### `||` — first truthy or last value
+
+```js
+const obj = nullableObj || {}; // fallback if nullableObj is falsy
+const val = 0 || 5; // 5 (0 is falsy)
+```
+
+### `&&` — first falsy or last value
+
+```js
+x === 10 && alert("x is 10"); // alerts only if condition true
+cb && cb(); // call cb only if it is truthy (exists)
+```
+
+Cautions:
+
+- `0`, `''`, and `false` are valid values but falsy: `val = param || default` will replace legitimate `0` or `''`. Use explicit checks or ES6 default parameters when appropriate:
+
+```js
+function f(x = 10) { ... } // safer for function defaults
+```
+
+- Order matters: use the guard first to avoid runtime errors:
+
+```js
+if (obj && obj.prop) { ... } // safe
+// NOT: if (obj.prop && obj) — may throw if obj is undefined
+```
+
+## 11.6 Boolean expressions and grouping
+
+- Parentheses clarify precedence and intent. Use them liberally in complex conditions:
+
+```js
+if ((age >= 18 && height >= 5.11) || (status === "royalty" && hasInvitation)) {
+  // ...
+}
+```
+
+- Breaking complex logic into well-named boolean variables improves readability:
+
+```js
+const isLegal = age >= 18;
+const isTall = height >= 5.11;
+if ((isLegal && isTall) || (isRoyalty && hasInvitation)) { ... }
+```
+
+## 11.7 Common pitfalls & best practices
+
+- **Prefer `===` / `!==`** to avoid implicit coercion surprises.
+- **Avoid complex nested ternaries**; they are hard to read and maintain.
+- **Always use `break`** in `switch` cases unless intentional fall-through — comment fall-through cases for clarity.
+- **Guard property access** (`obj && obj.prop`) or use optional chaining (`obj?.prop`) if your environment supports it.
+- **Do not use `||` for defaults** if `0`, `false`, or `''` are valid inputs — use ES6 default params or explicit `null`/`undefined` checks.
+- **Don’t shadow `undefined`** or assign to it. Use `void 0` for a guaranteed undefined if you need it.
+- **Prefer declarative dispatch (strategy, map)** for many conditions rather than long `if/else` or `switch` blocks.
+- **Test edge cases**: falsy values, unexpected types, and short-circuit side effects.
+
+### Quick examples
+
+Ternary vs if/else
+
+```js
+const score = 85;
+const grade = score >= 90 ? "A" : score >= 80 ? "B" : "C"; // readable if short
+// or
+if (score >= 90) grade = "A";
+else if (score >= 80) grade = "B";
+else grade = "C";
+```
+
+Guarding:
+
+```js
+// safe
+if (arr && arr.length) {
+  /* use arr[0] */
+}
+
+// optional chaining (modern)
+if (arr?.length) {
+  /* use arr[0] */
+}
+```
+
+Strategy example (dynamic):
+
+```js
+const actions = { add: () => 1, sub: () => -1 };
+function act(op) {
+  (actions[op] || (() => 0))();
+}
+```
