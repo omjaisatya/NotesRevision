@@ -3288,3 +3288,264 @@ Object.values({ 0: "a", 1: "b" });
 ```
 
 Equivalent order to `for...in` for enumerable own properties.
+
+# Chapter 14 . Arithmetic (Math)
+
+## 14.1 Constants (quick reference)
+
+- `Math.E` ≈ 2.718281828 (base of natural logarithm)
+- `Math.LN10` ≈ 2.302585092 (ln(10))
+- `Math.LN2` ≈ 0.693147180 (ln(2))
+- `Math.LOG10E` ≈ 0.434294482 (log₁₀e)
+- `Math.LOG2E` ≈ 1.442695041 (log₂e)
+- `Math.PI` ≈ 3.141592653589793
+- `Math.SQRT1_2` ≈ 0.707106781 (√(1/2))
+- `Math.SQRT2` ≈ 1.414213562 (√2)
+
+Number constants:
+
+- `Number.EPSILON` ≈ 2.220446049250313e-16 (difference between 1 and the next representable number)
+- `Number.MAX_SAFE_INTEGER` = 2^53 - 1
+- `Number.MIN_SAFE_INTEGER` = -(2^53 - 1)
+- `Number.MAX_VALUE` ≈ 1.7976931348623157e308
+- `Number.MIN_VALUE` ≈ 5e-324
+- `Infinity` / `-Infinity` represent ±∞.
+
+## 14.2 Remainder / Modulus (`%`)
+
+- `a % b` returns the remainder after integer division. Sign follows the dividend (first operand):
+
+```js
+(42 % 10) - // 2
+  (42 % 10); // -2
+(42 % -10) - // 2
+  (42 % -10); // -2
+```
+
+Common uses:
+
+- even check: `x % 2 === 0`
+- cyclic indexes: `i = (i + d + n) % n` ensures result in `[0, n)`
+- fractional part: `fraction = x % 1` (note: sign preserved for negatives)
+
+## 14.3 Rounding
+
+- `Math.round(x)` — nearest integer, ties round _up_ (toward +∞): `Math.round(2.5) === 3`, `Math.round(-2.5) === -2`.
+- `Math.ceil(x)` — round up (toward +∞): `Math.ceil(2.3) === 3`, `Math.ceil(-1.1) === -1`.
+- `Math.floor(x)` — round down (toward -∞): `Math.floor(2.7) === 2`, `Math.floor(-1.1) === -2`.
+- `Math.trunc(x)` (ES6) — remove fractional part (toward 0): `Math.trunc(2.7) === 2`, `Math.trunc(-2.7) === -2`.
+
+Round to `places`:
+
+```js
+function roundTo(value, places) {
+  const p = Math.pow(10, places);
+  return Math.round(value * p) / p;
+}
+```
+
+Variants: `ceilTo` / `floorTo` replace `Math.round` with `Math.ceil` / `Math.floor`.
+
+## 14.4 Trigonometry (radians)
+
+All core trig functions expect radians. Convert: `deg * Math.PI / 180`.
+
+- `Math.sin(x)`, `Math.cos(x)`, `Math.tan(x)`
+- Inverses: `Math.asin`, `Math.acos`, `Math.atan`
+- `Math.atan2(y, x)` — correct usage: first argument **y**, second **x**; returns angle in `(-π, π]`. Example: direction from p1 to p2:
+
+```js
+Math.atan2(p2.y - p1.y, p2.x - p1.x);
+```
+
+- Hyperbolic variants: `Math.sinh`, `Math.cosh`, `Math.tanh`, and `Math.asinh`, `Math.acosh`, `Math.atanh`.
+
+## 14.5 Bitwise operators
+
+All operate on 32-bit integers (`ToInt32` conversion).
+
+- OR `|`, AND `&`, XOR `^`, NOT `~`
+- Shifts: `<<` (left), `>>` (signed right, sign-propagating), `>>>` (unsigned right, zero-fill)
+- Assignment forms: `a |= b`, `a &= b`, etc.
+
+Notes:
+
+- `a << n` ≈ `Math.floor(a) * 2^n` for integers.
+- `>>>` always yields a non-negative number. For negative inputs `>>>` produces an unsigned interpretation (large positive).
+- Bitwise ops are restricted to 32-bit; using them coerces numbers to signed 32-bit integers.
+
+Endian caution when manipulating typed arrays and raw bytes — test platform endianness before low-level bit hacks.
+
+## 14.6 Increment / 14.25 Decrement (`++`, `--`)
+
+- Prefix (`++x`) increments and returns new value.
+- Postfix (`x++`) returns old value, then increments.
+  Prefer prefix in hot loops (avoids temporary in some engines), but it's a micro-optimization.
+
+Example:
+
+```js
+let a = 5;
+let b = a++; // b=5, a=6
+let c = ++a; // a=7, c=7
+```
+
+`++` and `--` **mutate** the variable; not allowed on constants/literals.
+
+## 14.7 Exponentiation
+
+- `Math.pow(a, b)` — standard.
+- `a ** b` — exponent operator (ES2016+).
+- nth root: `Math.pow(value, 1 / n)`.
+
+## 14.8 Random floats & integers
+
+- `Math.random()` → float in `[0, 1)`.
+  Helpers:
+
+```js
+// [min, max)
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+// [min, max) integers
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+// [min, max] inclusive integers
+function getRandomIntInclusive(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+```
+
+Random between min and max shorthand:
+
+```js
+function randomBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+```
+
+## 14.9 Addition (`+`)
+
+- Numeric addition or string concatenation. If either operand is a string, result is string.
+- Coercion: `true` → `1` when numeric; `null` → `0`; `undefined + number` → `NaN`.
+  Be explicit: `Number(...)` or `String(...)` when mixing types.
+
+## 14.10 Endianness & typed arrays (brief)
+
+Detect little-endian:
+
+```js
+function isLittleEndian() {
+  const buf = new ArrayBuffer(4);
+  new Uint32Array(buf)[0] = 0x0f000000;
+  return new Uint8Array(buf)[0] !== 0x0f;
+}
+```
+
+When mapping pixels to `Uint32Array` you must adapt masks depending on endianness.
+
+## 14.11 Weighted randomness / simulate events
+
+Weighted pick:
+
+```js
+function weightedIndex(weights) {
+  const sum = weights.reduce((s, w) => s + w, 0);
+  const r = Math.random() * sum;
+  let acc = 0;
+  for (let i = 0; i < weights.length; i++) {
+    acc += weights[i];
+    if (r < acc) return i;
+  }
+  return -1;
+}
+```
+
+## 14.12 Subtraction (`-`), 14.14 Multiplication (`*`), 14.24 Division (`/`)
+
+Standard arithmetic. Non-numeric strings coerce to `NaN` for numeric ops (`"5" - 1 === 4`, `"foo" - 1 === NaN`).
+
+## 14.13 Max & Min
+
+- `Math.max(...arr)`, `Math.min(...arr)` (ES6 spread).
+- Older: `Math.max.apply(null, arr)`.
+
+## 14.14 Clamp a number
+
+```js
+function clamp(min, max, val) {
+  return Math.min(Math.max(min, +val), max);
+}
+```
+
+## 14.15 Ceil & Floor (recap)
+
+- `Math.ceil(x)` → smallest integer ≥ x.
+- `Math.floor(x)` → largest integer ≤ x.
+
+## 14.16 Roots
+
+- `Math.sqrt(x)` — square root.
+- `Math.cbrt(x)` — cube root (ES6).
+- `Math.pow(x, 1 / n)` — nth root.
+
+## 14.17 Gaussian-like randomness
+
+Approximate normal-ish distribution by averaging multiple uniform samples:
+
+```js
+function randomGaussian(samples = 3) {
+  let s = 0;
+  for (let i = 0; i < samples; i++) s += Math.random();
+  return s / samples;
+}
+```
+
+More samples → closer to bell curve. For true Gaussian use Box–Muller.
+
+## 14.18 `Math.atan2` direction
+
+Correct usage: `Math.atan2(deltaY, deltaX)` returns an angle in radians between `-π` and `π`.
+
+## 14.19 From polar → Cartesian
+
+Given `dir` (radians) and `dist`:
+
+```js
+const x = Math.cos(dir) * dist;
+const y = Math.sin(dir) * dist;
+```
+
+If your Y axis points up and your coordinate system expects a different convention, swap/negate as needed.
+
+## 14.20 `Math.hypot` (distance)
+
+Pythagoras for N-dimensions:
+
+```js
+Math.hypot(dx, dy); // sqrt(dx*dx + dy*dy)
+```
+
+## 14.21 Periodic functions with `Math.sin`
+
+Oscillator template:
+
+```js
+function oscillator(time, frequency = 1, amplitude = 1, phase = 0, offset = 0) {
+  return (
+    Math.sin(time * frequency * 2 * Math.PI + phase * 2 * Math.PI) * amplitude +
+    offset
+  );
+}
+```
+
+Use for waves, animations, LFOs, etc.
+
+## 14.22 Practical caveats & tips
+
+- Floating point rounding issues are inevitable; use `Number.EPSILON` to compare near-equality.
+- Prefer `Math.trunc` over bitwise hacks for truncation when numbers may exceed 32-bit range.
+- Bitwise ops coerce to 32-bit signed integers — use with care.
+- When performance matters, avoid creating large temporary arrays (e.g., spreading very large arrays into `Math.max(...arr)` can blow the stack).
