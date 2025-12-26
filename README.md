@@ -10,8 +10,12 @@ This repository contains my personal notes and tutorials on various development 
 
 ### JavaScript
 
-- **[JavaScript Tutorial](Javascript_tutorial.md)** - Comprehensive JavaScript tutorial
-- **[JS Notes Revision](JS_NOTES_REVISION.md)** - JavaScript revision notes and cheatsheet
+- **[JavaScript Tutorial](js/Javascript_tutorial.md)** - Comprehensive JavaScript tutorial
+- **[JS Notes Revision](js/JS_NOTES_REVISION.md)** - JavaScript revision notes and cheatsheet
+
+### HTML
+
+- **[HTML](html/html_notes.md)** - HTML Revision or Notes and Cheatsheet
 
 ### Coming Soon
 
