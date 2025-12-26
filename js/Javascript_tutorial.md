@@ -1397,16 +1397,16 @@ To make this visual, here are reference diagrams showing how JS environments wor
 
 ### Global Execution Context example diagram:
 
-<img src="./img/global/code_exec.jpg" alt="Global Execution Context" style="max-width:100%; height:auto;">
-<img src="./img/global/execution-context-1.jpg" alt="Global Execution Context" style="max-width:100%; height:auto;">
-<img src="./img/global/global_code_exc.webp" alt="Global Execution Context" style="max-width:100%; height:auto;">
+<img src="../assets/js_img/global/code_exec.jpg" alt="Global Execution Context" style="max-width:100%; height:auto;">
+<img src="../assets/js_img/global/execution-context-1.jpg" alt="Global Execution Context" style="max-width:100%; height:auto;">
+<img src="../assets/js_img/global/global_code_exc.webp" alt="Global Execution Context" style="max-width:100%; height:auto;">
 
 ### Function Execution Context example diagram:
 
-<img src="./img/func/7js_execution.jpg" alt="Function Execution Context" style="max-width:100%; height:auto;">
-<img src="./img/func/7js_execution2.jpg" alt="Function Execution Context" style="max-width:100%; height:auto;">
-<img src="./img/func/funct_code.png" alt="Function Execution Context" style="max-width:100%; height:auto;">
-<img src="./img/func/funct_code_exec.png" alt="Function Execution Context" style="max-width:100%; height:auto;">
+<img src="../assets/js_img//func/7js_execution.jpg" alt="Function Execution Context" style="max-width:100%; height:auto;">
+<img src="../assets/js_img/func/7js_execution2.jpg" alt="Function Execution Context" style="max-width:100%; height:auto;">
+<img src="../assets/js_img/func/funct_code.png" alt="Function Execution Context" style="max-width:100%; height:auto;">
+<img src="../assets/js_img/func/funct_code_exec.png" alt="Function Execution Context" style="max-width:100%; height:auto;">
 
 You don’t need to memorize the boxes, but you do need to understand what they represent.
 

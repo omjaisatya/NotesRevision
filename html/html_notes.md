@@ -2427,12 +2427,142 @@ Time picker (hours:minutes:seconds).
 
 Rarely supported; replaced by `datetime-local`.
 
-## 📅 **17.23 - Date**
+## **17.23 - Date**
 
 Date picker (not supported in older Firefox/IE).
 
 ```html
 <input type="date" />
 ```
+
+---
+
+# **Chapter 18: Forms**
+
+Forms allow users to input information and send it to a server.
+A `<form>` element contains inputs and controls how the data is submitted.
+
+### **Form Attributes**
+
+| Attribute          | Description                                      |
+| ------------------ | ------------------------------------------------ |
+| **action**         | URL where form data is sent.                     |
+| **method**         | HTTP method (`GET` or `POST`).                   |
+| **enctype**        | How to encode data (important for file uploads). |
+| **accept-charset** | Allowed character encodings (e.g., UTF-8).       |
+| **autocomplete**   | Enables/disables browser autofill.               |
+| **name**           | Optional identifier for a form.                  |
+| **novalidate**     | Disables HTML5 validation.                       |
+| **target**         | Where to display the server response.            |
+
+## **Section 18.1: Submitting Forms**
+
+### action
+
+- Defines where data goes.
+- If empty, submits to the **same page**.
+
+```html
+<form action="process.php"></form>
+```
+
+### method
+
+Two allowed values:
+
+### **GET**
+
+- Appends form data to the URL.
+- Used for search, filters, fetching data.
+- Example result:
+
+  ```
+  page.php?firstname=Bob&lastname=Smith
+  ```
+
+### **POST**
+
+- Sends data in the request body.
+- Required for anything sensitive or large.
+- Cleaner and safer than GET.
+
+### Name is required for submission
+
+```html
+<input type="text" name="lastname" />
+```
+
+### Additional attributes example
+
+```html
+<form
+  action="submit.php"
+  method="post"
+  target="_blank"
+  accept-charset="UTF-8"
+  enctype="application/x-www-form-urlencoded"
+  autocomplete="off"
+  novalidate
+></form>
+```
+
+## **Section 18.2: The target Attribute**
+
+Controls where the response appears.
+
+| Value         | Meaning             |
+| ------------- | ------------------- |
+| **\_blank**   | New window/tab      |
+| **\_self**    | Same page (default) |
+| **\_parent**  | Parent frame        |
+| **\_top**     | Full window         |
+| **framename** | Named iframe        |
+
+Note: Framesets are obsolete in HTML5, but this still works with iframes.
+
+## **Section 18.3: Uploading Files**
+
+To upload files:
+
+1. Use `POST`
+2. Use `multipart/form-data`
+3. Add a `<input type="file">`
+
+Example:
+
+```html
+<form method="post" enctype="multipart/form-data" action="upload.php">
+  <input type="file" name="pic" />
+  <input type="submit" value="Upload" />
+</form>
+```
+
+## **Section 18.4: Grouping Inputs with `<fieldset>`**
+
+`<fieldset>` visually groups related input fields.
+`<legend>` gives that group a label.
+
+Example:
+
+```html
+<form>
+  <fieldset>
+    <legend>Contact Info</legend>
+    Name:<br />
+    <input type="text" /><br />
+    Email:<br />
+    <input type="text" /><br />
+  </fieldset>
+
+  <fieldset>
+    <legend>Preferences</legend>
+    <input type="checkbox" /> Subscribe
+  </fieldset>
+
+  <input type="submit" />
+</form>
+```
+
+Supported by all major browsers.
 
 ---
