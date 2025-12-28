@@ -3065,3 +3065,554 @@ Without JavaScript, it’s literally just an empty tag.
 - The `for` attribute is informational, not functional.
 - Real functionality → **JavaScript updates `.value`**.
 - If the `<output>` is outside a form, `form="..."` attaches it.
+
+---
+
+# **Chapter 24 Void Elements (HTML)**
+
+Void elements are **HTML elements that cannot have content** and **never have closing tags**.
+They are _self-contained_.
+
+If you ever see someone try to write:
+
+```html
+<br></br>
+```
+
+> That’s wrong. Void elements never take closing tags.
+
+## **HTML 4.01 / XHTML Strict Void Elements**
+
+These are the classic void elements:
+
+- **`<area>`** —> clickable areas within an `<map>`
+- **`<base>`** —> sets a base URL for relative links
+- **`<br>`** —> line break
+- **`<col>`** —> table column (**deprecated**)
+- **`<hr>`** —> horizontal rule
+- **`<img>`** —> image
+- **`<input>`** —> user input control
+- **`<link>`** —> external resources (CSS, icons, etc.)
+- **`<meta>`** —> metadata
+- **`<param>`** —> parameters for embedded content
+
+## **HTML5 Adds (non-deprecated)**
+
+HTML5 includes all the above, plus:
+
+- **`<source>`** : media sources for `<audio>`, `<video>`, `<picture>`
+
+HTML5 _also historically had_:
+
+- **`<command>`** : **obsolete**
+- **`<keygen>`** : **deprecated**
+
+Ignore those, they’re dead.
+
+## **Void Elements Cannot Contain Anything**
+
+Correct:
+
+```html
+<input type="number" placeholder="Enter a number" />
+<br />
+<hr />
+<img src="logo.png" alt="" />
+```
+
+Wrong:
+
+```html
+<input>some text</input>      <!-- illegal -->
+<br>stuff</br>                <!-- illegal -->
+```
+
+## **About Self-Closing Syntax (`/>`)**
+
+This is where people get confused.
+
+### HTML5 rules:
+
+- **You do NOT need a trailing slash.**
+- `<img>` is a void element regardless of whether you use `/>` or not.
+
+### Examples allowed in HTML5:
+
+```html
+<img src="x.png" /> <img src="x.png" />
+```
+
+Both work.
+
+### In XHTML?
+
+You MUST use:
+
+```html
+<img src="x.png" />
+```
+
+But you're learning **HTML**, not XHTML so don't overthink it.
+
+---
+
+# **Chapter 25 Media Elements**
+
+### **Core Attributes**
+
+- **width / height** → sets dimensions in pixels.
+- **controls** → shows built-in playback UI.
+- **autoplay** → media starts automatically.
+- **loop** → plays on repeat.
+- **muted** → starts without sound (required for autoplay on many browsers).
+- **poster** → placeholder image for `<video>` before loading/playing.
+- **`<source>`** → provides multiple media files; browser picks what it supports.
+- **`<track>`** → subtitles, captions, chapters, etc.
+
+## **Audio**
+
+### **Basic usage:**
+
+```html
+<audio controls>
+  <source src="file.mp3" type="audio/mpeg" />
+  Your browser does not support the audio element.
+</audio>
+```
+
+- Use multiple `<source>` tags for fallback formats.
+- Add a text fallback for old browsers.
+
+## **Video**
+
+### **Basic usage:**
+
+```html
+<video width="500" height="700" controls>
+  <source src="video.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+```
+
+- Same idea as audio: multiple sources = better compatibility.
+- MP4 is widely supported, but not universal.
+
+## **Multi-source / Subtitles Examples**
+
+### **Video with fallback + poster:**
+
+```html
+<video src="videofile.webm" autoplay poster="posterimage.jpg">
+  Sorry, your browser doesn't support embedded videos.
+  <a href="videofile.webm">Download instead</a>
+</video>
+```
+
+### **Video with subtitles:**
+
+```html
+<video src="foo.webm" controls>
+  <track kind="subtitles" src="foo.en.vtt" srclang="en" label="English" />
+  <track kind="subtitles" src="foo.sv.vtt" srclang="sv" label="Svenska" />
+</video>
+```
+
+### **Full multi-format (best practice):**
+
+```html
+<video width="480" controls poster="poster.gif">
+  <source src="video.webm" type="video/webm" />
+  <source src="video.mp4" type="video/mp4" />
+  <source src="video.ogv" type="video/ogg" />
+  Your browser doesn't support HTML5 video.
+</video>
+```
+
+## **Audio examples**
+
+### **Simple playback:**
+
+```html
+<audio src="audio.ogg" autoplay>
+  Your browser does not support the audio element.
+</audio>
+```
+
+### **Audio with captions:**
+
+```html
+<audio src="foo.ogg" controls>
+  <track kind="captions" src="foo.en.vtt" srclang="en" label="English" />
+  <track kind="captions" src="foo.sv.vtt" srclang="sv" label="Svenska" />
+</audio>
+```
+
+## **Video Background / Header**
+
+Perfect for hero sections, landing pages, and banners.
+
+### **Autoplay loop background video (no controls):**
+
+```html
+<video
+  width="1280"
+  height="720"
+  autoplay
+  muted
+  loop
+  poster="video.jpg"
+  id="videobg"
+>
+  <source src="video.mp4" type="video/mp4" />
+  <source src="video.webm" type="video/webm" />
+  <source src="video.ogg" type="video/ogg" />
+</video>
+```
+
+### **CSS fallback:**
+
+```css
+#videobg {
+  background: url(video.jpg) no-repeat;
+  background-size: cover;
+}
+```
+
+- Use the first frame of the video as the poster image for smoother fallback.
+
+---
+
+# **Chapter 26 Progress Element**
+
+## **What `<progress>` Does**
+
+- Represents **progress of a task** (e.g., downloads, uploads, loading, completion percentage).
+- HTML5-only element.
+
+### **Key Attributes**
+
+| Attribute    | Meaning                            |
+| ------------ | ---------------------------------- |
+| **max**      | Total amount of work required.     |
+| **value**    | Amount completed.                  |
+| **position** | Read-only; gives current position. |
+| **labels**   | Returns associated labels.         |
+
+### **Basic Example**
+
+```html
+<progress value="22" max="100"></progress>
+```
+
+Shows **22% filled**.
+
+## **Styling Progress Bars**
+
+Styling is a pain because every browser treats it differently. You override defaults depending on engine.
+
+### **General Setup**
+
+```css
+progress[value] {
+  width: 250px;
+  height: 20px;
+}
+```
+
+## **Chrome / Safari / Opera (WebKit / Blink)**
+
+You must remove their default appearance:
+
+```css
+progress[value] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+```
+
+Then style the bar background:
+
+```css
+progress[value]::-webkit-progress-bar {
+  background-color: green;
+}
+```
+
+## **Firefox**
+
+Firefox uses a different pseudo-element system and also draws a border by default.
+
+```css
+progress[value] {
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+}
+```
+
+## **Internet Explorer**
+
+IE 10+ supports `<progress>`, but **ignores background-color**.
+You must use **color** instead.
+
+```css
+progress[value] {
+  appearance: none;
+  border: none;
+  width: 250px;
+  height: 20px;
+  color: blue;
+}
+```
+
+## **HTML Fallback (for ancient browsers)**
+
+Works because unsupported browsers render the **inner HTML**, while modern ones ignore it.
+
+```html
+<progress max="100" value="20">
+  <div class="progress-bar">
+    <span style="width: 20%;">Progress: 20%</span>
+  </div>
+</progress>
+```
+
+This gives:
+
+- Native progress bar for modern browsers.
+- Custom fallback for old browsers.
+
+---
+
+# **Chapter 27 Selection Menu Controls**
+
+## **1. `<select>` : Dropdown / List Box**
+
+Creates a menu of choices.
+
+### **Basic Example**
+
+```html
+<select name="">
+  <option value="1">One</option>
+  <option value="2">Two</option>
+  <option value="3">Three</option>
+  <option value="4">Four</option>
+</select>
+```
+
+## **2. `size` Attribute**
+
+Controls how many rows are visible.
+
+- `size="0"` or `size="1"` → normal dropdown.
+- `size="n"` (n > 1) → becomes a **list box** with scroll.
+
+```html
+<select size="4"></select>
+```
+
+## **3. `multiple` Attribute**
+
+Enables multi-select.
+
+```html
+<select multiple></select>
+```
+
+Rules:
+
+- Automatically becomes a list box.
+- Cannot revert to dropdown style while allowing multiple selections.
+- With `multiple`, `size="0"` = browser default; `size="1"` forces visible height of _one row_.
+
+## **4. `<option>` : Menu Items**
+
+Default syntax:
+
+```html
+<option>Some Option</option>
+```
+
+### **Attributes**
+
+- **value** → sent to server on form submit.
+- **label** → text shown in the UI.
+- If omitted, text inside the tag is used for missing values.
+
+Examples:
+
+```html
+<option value="option1">Some Option</option>
+<option label="Some Option" value="Some Option"></option>
+```
+
+### **Default Selected Option**
+
+```html
+<option selected>...</option>
+```
+
+Rules:
+
+- If multiple options have `selected`, the **last one** wins (single-select).
+- In multi-select, **all** marked options start selected.
+
+## **5. `<optgroup>` : Grouping Options**
+
+Used for structuring long lists.
+
+```html
+<select>
+  <option value="milk">Milk</option>
+
+  <optgroup label="Fruits">
+    <option value="banana">Banana</option>
+    <option value="strawberry">Strawberry</option>
+  </optgroup>
+
+  <optgroup label="Vegetables" disabled>
+    <option value="carrot">Carrot</option>
+    <option value="zucchini">Zucchini</option>
+  </optgroup>
+</select>
+```
+
+Notes:
+
+- Groups can be mixed with standalone options.
+- `disabled` on an optgroup disables _all_ child options.
+- You cannot re-enable individual options inside a disabled group.
+
+## **6. `<datalist>` : Autocomplete List**
+
+Provides suggestions, not a dropdown menu by itself.
+
+```html
+<input list="Languages" />
+
+<datalist id="Languages">
+  <option value="PHP"></option>
+  <option value="Perl"></option>
+  <option value="Python"></option>
+  <option value="Ruby"></option>
+  <option value="C+"></option>
+</datalist>
+```
+
+Browser Support:
+
+- Chrome ✓
+- Edge ✓
+- Firefox ✓
+- Safari ✗ (no support)
+- Opera ✓
+
+---
+
+# **Chapter 28 : `<embed>` Element (Notes)**
+
+## **Purpose**
+
+`<embed>` inserts external, typically **non-HTML** content into a page.
+Common for plugins, Flash (legacy), PDFs, audio/video, and other media.
+
+New in HTML5.
+
+## **1. Key Attributes**
+
+| Attribute  | Purpose                      |
+| ---------- | ---------------------------- |
+| **src**    | URL of the embedded resource |
+| **type**   | MIME type of the resource    |
+| **width**  | Horizontal size              |
+| **height** | Vertical size                |
+
+## **2. Basic Usage**
+
+```html
+<embed src="myflash.swf" />
+```
+
+---
+
+# **Chapter 29 `<iframe>`**
+
+## **Purpose**
+
+Embeds another HTML page inside the current page.
+
+## **1. Key Attributes**
+
+| Attribute           | Purpose                                             |
+| ------------------- | --------------------------------------------------- |
+| **src**             | URL of the embedded page                            |
+| **srcdoc**          | Inline HTML to render instead of `src` if supported |
+| **name**            | Assigns a name; allows links to target this iframe  |
+| **width / height**  | Dimensions in CSS pixels (HTML5 only allows px)     |
+| **sandbox**         | Enables a restricted, isolated environment          |
+| **allowfullscreen** | Allows the iframe content to use fullscreen API     |
+
+## **2. Basic Usage**
+
+```html
+<iframe src="base.html"></iframe>
+```
+
+## **3. Sandboxing**
+
+Full lockdown:
+
+```html
+<iframe sandbox src="http://example.com/"></iframe>
+```
+
+Relaxed permissions:
+
+```html
+<iframe sandbox="allow-scripts allow-forms" src="http://example.com/"></iframe>
+```
+
+Common sandbox tokens:
+
+- **allow-scripts**
+- **allow-forms**
+- **allow-same-origin**
+- **allow-popups**
+- **allow-top-navigation**
+- **allow-pointer-lock**
+- (etc.)
+
+**Use case:** isolating untrusted content while controlling what it’s allowed to do.
+
+## **4. Setting Size**
+
+```html
+<iframe src="base.html" width="800" height="600"></iframe>
+```
+
+## **5. Using `srcdoc`**
+
+Inline HTML instead of loading external content.
+
+```html
+<iframe srcdoc="<p>IFrames are cool!</p>"></iframe>
+```
+
+If the browser doesn't support `srcdoc`, it falls back to `src`.
+
+```html
+<iframe srcdoc="<p>Iframes are cool!</p>" src="fallback.html"></iframe>
+```
+
+## **6. Controlling iframe content from outside (anchors)**
+
+Use `target` + iframe `name`.
+
+```html
+<iframe src="webpage.html" name="myIframe"></iframe>
+
+<a href="different_page.html" target="myIframe"> Change IFrame content </a>
+```
+
+---
