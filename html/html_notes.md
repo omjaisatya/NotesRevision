@@ -3616,3 +3616,764 @@ Use `target` + iframe `name`.
 ```
 
 ---
+
+# **Chapter 30 Content Languages**
+
+## **1. Base Document Language**
+
+Declare the primary language at the root:
+
+```html
+<html lang="en"></html>
+```
+
+- Applies to **all content and attribute values** unless overridden.
+- Good for accessibility, SEO, screen readers, and translation tools.
+
+## **2. Element Language**
+
+Use `lang` to declare the language of:
+
+- Element content
+- Attribute text values
+
+```html
+<p lang="en">This text is in English.</p>
+<p lang="en" title="English attribute">...</p>
+```
+
+### Inheritance
+
+Language is inherited by descendant elements unless overridden:
+
+```html
+<div lang="en">
+  <p>English content</p>
+</div>
+```
+
+## **3. Multiple Languages Inside a Document**
+
+Override the inherited language for specific phrases:
+
+```html
+<p lang="en">
+  This is English with a German word <span lang="de">Hallo</span>.
+</p>
+```
+
+## **4. Regional URLs (hreflang)**
+
+Use **hreflang** on `<a>` or `<area>` to specify the language of the linked resource.
+
+```html
+<a href="example.org" hreflang="en">example.org</a>
+```
+
+- Uses **BCP 47** language tags (e.g., `en-US`, `fr-CA`, `pt-BR`).
+
+## **5. Handling Mixed-Language Attributes**
+
+You can override language even for attributes by nesting an element with its own `lang`:
+
+```html
+<p lang="en" title="English">
+  <span lang="de" title="German text">Hallo Welt!</span>
+</p>
+```
+
+### Elements that _cannot_ override language:
+
+`applet`, `base`, `basefont`, `br`, `frame`, `frameset`, `hr`, `iframe`, `meta`, `param`, `script` (HTML4 list)
+
+These elements do **not** accept `lang` for overriding.
+
+---
+
+# **Chapter 31 SVG**
+
+## **1. What SVG Is**
+
+- **SVG = Scalable Vector Graphics**
+- Resolution-independent; renders cleanly at any size.
+- Can be **embedded inline**, **linked externally**, or **used via CSS**.
+- SVG supports shapes, paths, text, images, and scripting.
+
+## **2. Inline SVG**
+
+SVG code can be written directly inside HTML:
+
+```html
+<svg
+  class="attention"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  viewBox="0 0 1000 1000"
+>
+  <path id="attention" d="..." />
+</svg>
+```
+
+### Advantages:
+
+- Can be styled with **CSS**.
+- Can be manipulated with **JavaScript**.
+- Easily animated.
+
+Example styling:
+
+```css
+.attention {
+  fill: red;
+  width: 50px;
+  height: 50px;
+}
+```
+
+## **3. External SVG**
+
+### **Using `<img>`**
+
+```html
+<img src="attention.svg" width="50" height="50" />
+```
+
+**Pros:** Simple
+**Cons:** Cannot apply CSS to internal SVG parts; no JS manipulation.
+
+### **Using `<object>`**
+
+```html
+<object
+  type="image/svg+xml"
+  data="attention.svg"
+  width="50"
+  height="50"
+></object>
+```
+
+**Pros:**
+
+- The SVG becomes part of the document.
+- CSS and JavaScript **can** manipulate internal SVG elements.
+
+**Better than `<img>`** when interactivity or styling is needed.
+
+## **4. SVG via CSS (Backgrounds)**
+
+### External file
+
+```css
+.attention {
+  background-image: url(attention.svg);
+  background-size: 100% 100%;
+  width: 50px;
+  height: 50px;
+}
+```
+
+### Inline SVG inside CSS (data URI)
+
+```css
+background-image: url(data:image/svg+xml,<svg ...>...</svg>);
+```
+
+**Notes:**
+
+- Useful for embedding assets without needing external files.
+- Minify SVG before embedding to avoid bloated CSS.
+
+---
+
+# **Chapter 32 Canvas**
+
+## **1. Purpose**
+
+- `<canvas>` is an HTML5 element that provides a **drawable 2D surface**.
+- All drawing is done using **JavaScript** via the **CanvasRenderingContext2D** API.
+- Default size: **300 × 150 px** unless `width` and `height` attributes are specified.
+
+## **2. Basic Usage**
+
+### HTML
+
+```html
+<canvas id="myCanvas">
+  Cannot display graphic. Canvas is not supported by your browser.
+</canvas>
+```
+
+### JavaScript
+
+```javascript
+var ctx = document.getElementById("myCanvas").getContext("2d");
+
+ctx.fillStyle = "#f00";
+ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+ctx.fillStyle = "#000";
+ctx.fillText("My red canvas with some black text", 24, 32);
+```
+
+**Key API:**
+
+- `getContext("2d")` → returns the 2D drawing context.
+- `fillStyle` → sets fill color.
+- `fillRect(x, y, w, h)` → draws filled rectangle.
+- `fillText(text, x, y)` → draws text.
+
+## **3. Drawing Two Rectangles Example**
+
+### Important Steps
+
+1. Get `<canvas>` element.
+2. Get 2D context.
+3. Set fill color and draw rectangles.
+
+### Code Summary
+
+```javascript
+var canvas = document.querySelector("canvas");
+var ctx = canvas.getContext("2d");
+
+// Red rectangle
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 100, 100);
+
+// Green rectangle (overlapping)
+ctx.fillStyle = "green";
+ctx.fillRect(25, 25, 50, 50);
+```
+
+### HTML Setup
+
+```html
+<canvas width="300" height="200"></canvas>
+```
+
+## **4. Extra Notes**
+
+- `canvas { border: 1px solid gray; }` helps visualize the drawing area.
+- `<canvas>` requires JS; alone it displays nothing.
+- Inner fallback text appears only if the browser doesn’t support canvas.
+
+---
+
+# **Chapter 33 Meta Information**
+
+## **1. Purpose of Meta Tags**
+
+- Provide metadata about a page (description, author, encoding, indexing rules, social media previews, mobile behavior, etc.)
+- Placed inside `<head>`.
+
+# **2. Page Information Meta Tags**
+
+### **application-name**
+
+For web apps only.
+
+```html
+<meta name="application-name" content="OpenStreetMap" />
+```
+
+### **author**
+
+One author only.
+
+```html
+<meta name="author" content="Your Name" />
+```
+
+### **description**
+
+Used by search engines; first ~20–25 words matter.
+
+```html
+<meta name="description" content="Page Description" />
+```
+
+### **generator**
+
+Only for auto-generated pages.
+
+```html
+<meta name="generator" content="HTML Generator 1.42" />
+```
+
+### **keywords**
+
+Mostly obsolete; if used, only first ~20 count.
+
+```html
+<meta name="keywords" content="html, css, javascript" />
+```
+
+# **3. Character Encoding**
+
+### **HTML5**
+
+```html
+<meta charset="UTF-8" />
+```
+
+- Prefer UTF-8.
+- Old HTML4 fallback:
+
+```html
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+```
+
+# **4. Robots / Search Engine Control**
+
+Controls indexing + link following.
+
+Examples:
+
+```html
+<meta name="robots" content="noindex" />
+```
+
+### **Common Directives**
+
+| Directive           | Meaning                  |
+| ------------------- | ------------------------ |
+| all                 | default (index + follow) |
+| noindex             | don’t index page         |
+| nofollow            | don’t follow links       |
+| none                | noindex + nofollow       |
+| noarchive / nocache | don’t cache              |
+| nosnippet           | no snippet in results    |
+| notranslate         | disable translation      |
+| noimageindex        | don’t index images       |
+
+**Tip:** You rarely need to explicitly set `index` or `follow`.
+
+# **5. Social Media Metadata**
+
+## **Open Graph (Facebook, LinkedIn, etc.)**
+
+```html
+<meta property="og:title" content="Content Title" />
+<meta property="og:description" content="Description here" />
+<meta property="og:image" content="https://example.com/image.jpg" />
+<meta property="og:url" content="https://example.com/page.html" />
+<meta property="og:type" content="website" />
+```
+
+## **Facebook Instant Articles**
+
+Requires special markup:
+
+```html
+<meta property="op:markup_version" content="v1.0" />
+```
+
+## **Twitter Cards**
+
+```html
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Content Title" />
+<meta name="twitter:description" content="Description" />
+<meta name="twitter:image" content="https://example.com/image.jpg" />
+```
+
+## **Google+ / Schema.org (still useful for SEO)**
+
+```html
+<meta itemprop="name" content="Content Title" />
+<meta itemprop="image" content="https://example.com/image.jpg" />
+```
+
+# **6. Mobile Layout Control (Viewport)**
+
+Most common:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+```
+
+### Attributes
+
+- `width=device-width` → match screen width
+- `initial-scale=1` → no initial zoom
+- `maximum-scale`, `minimum-scale`
+- `user-scalable=no` → disables zoom (usually a bad idea)
+
+# **7. Automatic Page Refresh**
+
+Every 5 seconds:
+
+```html
+<meta http-equiv="refresh" content="5" />
+```
+
+**Not recommended** for UX; avoid when possible.
+
+# **8. Disable Phone Number Detection (iOS/WebKit)**
+
+```html
+<meta name="format-detection" content="telephone=no" />
+```
+
+# **9. Automatic Redirect**
+
+After 5 seconds:
+
+```html
+<meta http-equiv="refresh" content="5;url=https://example.com/" />
+```
+
+# **10. Web App / Mobile App Mode**
+
+### **Chrome Android**
+
+```html
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="black" />
+```
+
+### **iOS**
+
+```html
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+```
+
+---
+
+# **Chapter 34 Marking Up Computer Code**
+
+## **1. Block Code: `<pre>` + `<code>`**
+
+Use **both together** when:
+
+- You want to preserve whitespace
+- Indentation matters
+- You’re showing multiple lines of code
+
+### **Example**
+
+```html
+<pre>
+<code>
+x = 42
+if x == 42:
+    print "x is 42"
+</code>
+</pre>
+```
+
+### **Important**
+
+HTML still parses characters inside `<pre><code>`, so you must escape special characters:
+
+- `<` → `&lt;`
+- `>` → `&gt;`
+- `&` → `&amp;`
+
+Example for showing HTML code:
+
+```html
+<pre>
+<code>
+&lt;p&gt;This is a paragraph.&lt;/p&gt;
+</code>
+</pre>
+```
+
+## **2. Inline Code: `<code>`**
+
+Use `<code>` inside normal text for:
+
+- Inline code snippets
+- Element names
+- Variable names
+- Short command references
+
+### Example
+
+```html
+<p>The <code>a</code> element creates a hyperlink.</p>
+```
+
+---
+
+# **Chapter 35 Marking Up Quotes**
+
+## **1. Inline Quotes: `<q>`**
+
+Use `<q>` for short quotes that appear _within_ a sentence.
+
+### Example
+
+```html
+<p>She wrote <q>The answer is 42.</q> and everyone agreed.</p>
+```
+
+### Key rules
+
+- **Do NOT manually add quotation marks.**
+  Browsers automatically insert them.
+- Use `cite` to reference the source **URL**, though browsers don’t display it:
+
+```html
+<q cite="http://example.com/blog/hello-world">The answer is 42.</q>
+```
+
+- If the source matters to the reader, **add an actual hyperlink** , the `cite` attribute alone isn’t visible.
+
+## **2. Block Quotes: `<blockquote>`**
+
+Use `<blockquote>` for longer quotations that stand as their own block.
+
+### Example
+
+```html
+<blockquote>
+  <p>The answer is 42.</p>
+</blockquote>
+```
+
+### With source URL
+
+```html
+<blockquote cite="http://example.com/blog/hello-world">
+  <p>The answer is 42.</p>
+</blockquote>
+```
+
+Again: browsers won’t display the URL from `cite`. Add visible attribution if needed.
+
+## **3. Attribution / Citation Rules**
+
+### **HTML4**
+
+- **Attribution must NOT be inside `<blockquote>`.**
+- Put it _after_ the block:
+
+```html
+<blockquote cite="http://example.com/blog/hello-world">
+  <p>The answer is 42.</p>
+</blockquote>
+
+<p>
+  Source:
+  <cite><a href="http://example.com/blog/hello-world">Hello World</a></cite>
+</p>
+```
+
+- `<cite>` is for the _title of the source_, not the author.
+
+### **HTML5**
+
+- Attribution **may be placed inside** the `<blockquote>`.
+- It must be wrapped in either:
+
+  - `<footer>`, or
+  - `<cite>` for inline attribution
+
+Example (HTML5-correct):
+
+```html
+<blockquote cite="http://example.com/blog/hello-world">
+  <p>The answer is 42.</p>
+  <footer>
+    <p>
+      Source:
+      <cite><a href="http://example.com/blog/hello-world">Hello World</a></cite>
+    </p>
+  </footer>
+</blockquote>
+```
+
+- In HTML5, `<cite>` **can** reference the source OR the author.
+
+---
+
+# **Chapter 36 Tabindex**
+
+## **Purpose**
+
+`tabindex` controls keyboard focus order and whether elements can be reached via the **Tab** key.
+
+## **Tabindex Values**
+
+| Value              | Behavior                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| **Negative (< 0)** | Element is **focusable**, but **NOT** reachable via Tab navigation. (`tabindex="-1"`)                             |
+| **0**              | Element is focusable and included in **normal** tab order based on document flow.                                 |
+| **Positive (> 0)** | Element is focusable and placed in a **custom tab order**, based on the number (1, 2, 3...). **Not recommended.** |
+
+## **1. Add an Element to the Tabbing Order**
+
+Use when a non-interactive element must be keyboard-focusable:
+
+```html
+<div tabindex="0">Some button</div>
+```
+
+But realistically:
+**Use actual buttons or links instead** whenever possible — they come with built-in accessibility.
+
+## **2. Remove an Element from the Tabbing Order**
+
+Still focusable programmatically (e.g., via JavaScript), but not via Tab key:
+
+```html
+<button tabindex="-1">This button will not be reachable by tab</button>
+```
+
+Good for components that should not disrupt natural keyboard flow.
+
+## **3. Custom Tabbing Order (Not Recommended)**
+
+```html
+<div tabindex="2">Second</div>
+<div tabindex="1">First</div>
+```
+
+Why this is bad practice:
+
+- Breaks user expectations
+- Confuses screen-reader and keyboard users
+- Hard to maintain
+- Native DOM order is usually the correct order
+
+Better solution: **rearrange your HTML** so the natural tab order matches the UI layout.
+
+---
+
+# **Chapter 37 Global Attributes**
+
+Global attributes = attributes you can apply to **any** HTML element.
+
+### **List of Global Attributes**
+
+- **class** -> Assigns one or more class names (CSS hooks).
+- **contenteditable** -> Makes the element’s text editable in the browser.
+- **contextmenu** -> Specifies a custom right-click menu. (Obsolete in modern browsers.)
+- **dir** -> Text direction (`ltr`, `rtl`, `auto`).
+- **draggable** -> Allows the element to be draggable (`true`, `false`).
+- **hidden** -> Hides the element from rendering; still present in DOM.
+- **id** -> Unique identifier for targeting elements.
+- **lang** -> Language for the element’s content. Inherits if not set.
+- **spellcheck** -> Enables browser spell/grammar checking.
+- **style** -> Inline CSS (avoid when possible).
+- **tabindex** -> Keyboard navigation order.
+- **title** -> Tooltip text on hover.
+- **translate** -> Controls whether text should be auto-translated.
+
+## **Section 37.1 contenteditable**
+
+### **Make an element editable**
+
+```html
+<p contenteditable>This is an editable paragraph.</p>
+```
+
+- When clicked, the user can type directly into it.
+- Useful for live editing UI, demos, or WYSIWYG editors (though not robust enough on its own).
+
+### **Inheritance behavior**
+
+If a parent has `contenteditable`, all children become editable **unless overridden**:
+
+```html
+<p contenteditable>
+  This is editable.
+  <span contenteditable="false">This is NOT editable.</span>
+</p>
+```
+
+Even though the inner span is not editable, the cursor still appears inside it due to inherited caret behavior but it won't accept input.
+
+---
+
+# **Chapter 38 HTML5 Cache**
+
+## **HTML5 Application Cache (AppCache)**
+
+**Important:** AppCache is deprecated and replaced by **Service Workers**.
+But here’s how the legacy system worked.
+
+## **Section 38.1 Basic AppCache Example**
+
+### **1. HTML file must reference a manifest**
+
+```html
+<!DOCTYPE html>
+<html manifest="index.appcache">
+  <body>
+    <p>Content</p>
+  </body>
+</html>
+```
+
+### **2. The manifest file (index.appcache)**
+
+Must start with:
+
+```
+CACHE MANIFEST
+```
+
+Then list files to cache:
+
+```
+CACHE MANIFEST
+index.html
+```
+
+### **3. How it worked**
+
+- Browser loads the page **once**.
+- Parses the manifest.
+- Caches listed files.
+- When offline, the browser serves the cached versions.
+
+### **4. Requirements**
+
+- Manifest file must share the **same directory** (in this example).
+- MIME type must be `text/cache-manifest` (server requirement).
+
+### **5. Usage workflow**
+
+1. Load `index.html` online.
+2. Browser stores files.
+3. Switch to offline mode.
+4. Reload the page cached content appears.
+
+---
+
+# **Chapter 39 HTML Event Attributes**
+
+## **Section 39.1 Form Events**
+
+Events commonly used with form controls (inputs, selects, textareas):
+
+| Attribute         | When it fires                                                             |
+| ----------------- | ------------------------------------------------------------------------- |
+| **onblur**        | When the element _loses focus_.                                           |
+| **onchange**      | When the value changes _and_ the element loses focus (for most controls). |
+| **oncontextmenu** | When the user opens the context menu (usually right-click).               |
+| **onfocus**       | When the element _gains focus_.                                           |
+| **oninput**       | On every value update (real-time typing, pasting, etc.).                  |
+| **oninvalid**     | When form validation fails for that field.                                |
+| **onreset**       | When a form is reset.                                                     |
+| **onsearch**      | When text is entered in `<input type="search">`.                          |
+| **onselect**      | When text inside an element is selected.                                  |
+| **onsubmit**      | When a form is submitted.                                                 |
+
+---
+
+## **Section 39.2 Keyboard Events**
+
+Triggered by keyboard interaction:
+
+| Attribute      | When it fires                                               |
+| -------------- | ----------------------------------------------------------- |
+| **onkeydown**  | When a key is pressed down.                                 |
+| **onkeypress** | When a character key is pressed (deprecated; inconsistent). |
+| **onkeyup**    | When a key is released.                                     |
+
+---
